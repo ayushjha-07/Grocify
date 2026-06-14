@@ -1,0 +1,644 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ settings.store_name if settings else 'Pramod General Store' }} - Village Bazar{% endblock %}
+
+{% block content %}
+<!-- Customer Workspace Tabs -->
+<div class="flex flex-wrap items-center gap-2 border-b border-[#4E342E]/15 pb-4 mb-6">
+    <button onclick="switchCustomerTab('shopping')" id="cust-nav-shopping" class="px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200">
+        🛒 Buy Groceries
+    </button>
+    
+    {% if current_user and current_user.role == 'Customer' %}
+    <button onclick="switchCustomerTab('orders')" id="cust-nav-orders" class="px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200">
+        📦 Order History
+    </button>
+    <button onclick="switchCustomerTab('khata')" id="cust-nav-khata" class="px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200">
+        📖 My Bahi Khata
+    </button>
+    {% else %}
+    <div class="text-[10px] text-slate-500 font-semibold pl-4">
+        🔑 <a href="/login" class="text-[#C65D2E] hover:underline font-bold">Sign In</a> to check Order History & Bahi Khata
+    </div>
+    {% endif %}
+</div>
+
+<!-- Tab Panel 1: Shopping (Catalog + Cart) -->
+<div id="panel-shopping" class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    
+    <!-- Left Column: Categories List & Festival Banner -->
+    <div class="lg:col-span-1 space-y-6">
+        
+        <!-- Festival Offers Banner (Interactive) -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#8D230F] to-[#4E342E] border-2 border-[#E5A93B] p-5 shadow-lg shadow-red-950/20 text-[#F5E6CA]">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-[radial-gradient(#E5A93B_1px,transparent_1px)] [background-size:10px_10px] opacity-10"></div>
+            
+            <div class="flex items-center space-x-2 mb-3">
+                <i data-lucide="sparkles" class="w-4 h-4 text-[#E5A93B] animate-pulse"></i>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-[#E5A93B]">Festival Offerings</span>
+            </div>
+            
+            <div class="space-y-3">
+                <div id="festival-display" class="p-3 bg-black/35 rounded-xl border border-[#E5A93B]/20 text-center min-h-[90px] flex flex-col justify-center">
+                    <h4 class="text-sm font-serif font-bold text-[#E5A93B]" id="fest-title">Durga Puja Special</h4>
+                    <p class="text-[11px] mt-1 text-[#F5E6CA]/90" id="fest-desc">Shubho Sharodiya! Flat 10% off on all Grains & Oils staples basket.</p>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-1.5 pt-1">
+                    <button onclick="setFestival('diwali')" title="Diwali" class="fest-btn h-7 rounded bg-[#C65D2E]/20 border border-[#E5A93B]/20 flex items-center justify-center text-xs font-bold hover:bg-[#C65D2E] hover:text-[#F5E6CA] transition-all">🪔</button>
+                    <button onclick="setFestival('holi')" title="Holi" class="fest-btn h-7 rounded bg-[#C65D2E]/20 border border-[#E5A93B]/20 flex items-center justify-center text-xs font-bold hover:bg-[#C65D2E] hover:text-[#F5E6CA] transition-all">🎨</button>
+                    <button onclick="setFestival('rakhi')" title="Rakhi" class="fest-btn h-7 rounded bg-[#C65D2E]/20 border border-[#E5A93B]/20 flex items-center justify-center text-xs font-bold hover:bg-[#C65D2E] hover:text-[#F5E6CA] transition-all">🤝</button>
+                    <button onclick="setFestival('chhath')" title="Chhath Puja" class="fest-btn h-7 rounded bg-[#C65D2E]/20 border border-[#E5A93B]/20 flex items-center justify-center text-xs font-bold hover:bg-[#C65D2E] hover:text-[#F5E6CA] transition-all">☀️</button>
+                    <button onclick="setFestival('durga')" title="Durga Puja" class="fest-btn h-7 rounded bg-[#C65D2E]/20 border border-[#E5A93B]/20 flex items-center justify-center text-xs font-bold hover:bg-[#C65D2E] hover:text-[#F5E6CA] transition-all">🌸</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Categories Navigation card -->
+        <div class="bg-[#F5E6CA]/60 border border-[#4E342E]/10 rounded-2xl p-5 shadow-md">
+            <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider mb-4 border-b border-[#4E342E]/10 pb-2 flex items-center space-x-1.5">
+                <i data-lucide="tag" class="w-4 h-4 text-[#C65D2E]"></i>
+                <span>Categories</span>
+            </h3>
+            
+            <div class="space-y-1" id="categories-menu">
+                <button onclick="filterCategory('All')" id="cat-all" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold uppercase transition-all duration-200 bg-[#C65D2E]/10 text-[#C65D2E] border border-[#C65D2E]/20">
+                    All Products
+                </button>
+                {% for cat in categories %}
+                <button onclick="filterCategory('{{ cat }}')" id="cat-{{ cat|replace(' & ', '-')|replace(' ', '-') }}" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold uppercase transition-all duration-200 text-[#4E342E]/80 hover:bg-[#C65D2E]/5 hover:text-[#C65D2E]">
+                    {{ cat }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Column: Product Catalog Grid -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Hero Greetings Section -->
+        <div class="relative overflow-hidden rounded-2xl bg-[#F5E6CA]/30 border border-[#C65D2E]/20 p-6 flex flex-col justify-between shadow-sm">
+            <div class="absolute inset-0 bg-[#E5A93B]/5 opacity-30"></div>
+            <div>
+                <span class="text-[9px] font-bold text-[#C65D2E] uppercase tracking-widest block">Village Heritage Kirana</span>
+                <h3 class="text-xl font-serif font-bold text-[#4E342E] mt-1">Welcome to {{ settings.store_name if settings else 'Pramod General Store' }}</h3>
+                <p class="text-xs text-[#4E342E]/80 mt-2 leading-relaxed max-w-lg">
+                    Discover fresh groceries, staples, flour, spices, and everyday household essentials delivered directly with the same trust and warmth of village hospitality.
+                </p>
+            </div>
+            
+            <div class="mt-4 flex items-center space-x-4">
+                <!-- Live search -->
+                <div class="relative flex-grow max-w-xs">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="catalog-search" oninput="searchCatalog()" placeholder="Search products..." class="w-full pl-9 pr-4 py-2 bg-white/70 border border-[#4E342E]/10 rounded-xl text-xs focus:outline-none focus:border-[#C65D2E] transition-all text-[#4E342E]">
+                </div>
+                
+                <span class="text-[10px] text-slate-500 font-bold uppercase" id="results-count">
+                    Showing {{ products|length }} items
+                </span>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6" id="products-catalog-grid">
+            {% for product in products %}
+            <div class="product-item-card overflow-hidden rounded-2xl bg-white border border-[#4E342E]/10 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:border-[#C65D2E]/40 hover:shadow-lg relative group"
+                 data-id="{{ product.id }}"
+                 data-name="{{ product.name }}"
+                 data-category="{{ product.category }}"
+                 data-price="{{ product.price }}"
+                 data-stock="{{ product.stock }}">
+                 
+                 {% if product.stock == 0 %}
+                 <span class="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white shadow-sm uppercase">Out of Stock</span>
+                 {% elif product.stock < 10 %}
+                 <span class="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-white shadow-sm uppercase animate-pulse">Low Stock</span>
+                 {% endif %}
+
+                 <!-- Wood styled image frame -->
+                 <div class="h-40 bg-[#4E342E]/5 flex items-center justify-center border-b border-[#4E342E]/10 relative overflow-hidden">
+                     <div class="absolute inset-0 bg-[#E5A93B]/5 opacity-30"></div>
+                     
+                     {% set img_file = product.image %}
+                     {% if product.image == 'maggi' or product.image == 'bhujia' %}
+                         {% set img_file = 'biscuits' %}
+                     {% elif product.image == 'chana' %}
+                         {% set img_file = 'dal' %}
+                     {% elif product.image == 'frooti' %}
+                         {% set img_file = 'mustard_oil' %}
+                     {% elif product.image == 'thumsup' %}
+                         {% set img_file = 'coffee' %}
+                     {% elif product.image == 'shampoo' %}
+                         {% set img_file = 'handwash' %}
+                     {% elif product.image == 'lizol' %}
+                         {% set img_file = 'vim' %}
+                     {% endif %}
+                     <img src="{{ url_for('static', filename='images/' + img_file + '.png') }}" class="object-cover h-full w-full group-hover:scale-110 transition-transform duration-300">
+                 </div>
+
+                 <!-- Content details -->
+                 <div class="p-4 space-y-3">
+                     <div>
+                         <span class="text-[9px] font-bold text-[#E5A93B] uppercase tracking-wider">{{ product.category }}</span>
+                         <h4 class="text-sm font-bold text-[#4E342E] leading-snug mt-0.5 min-h-[40px]">{{ product.name }}</h4>
+                     </div>
+                     
+                     <div class="flex items-center justify-between">
+                         <span class="text-base font-extrabold text-[#4E342E]">₹{{ product.price }}</span>
+                         <span class="text-[10px] text-slate-500 font-semibold">{{ product.stock }} units left</span>
+                     </div>
+
+                     {% if product.stock > 0 %}
+                     <button onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ product.stock }})" class="w-full py-2 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-xl text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-orange-950/10 hover:shadow-orange-950/20">
+                         Add to Basket
+                     </button>
+                     {% else %}
+                     <button disabled class="w-full py-2 bg-slate-200 text-slate-400 font-bold rounded-xl text-xs cursor-not-allowed">
+                         Out of Stock
+                     </button>
+                     {% endif %}
+                 </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right Column: Smart Shopping Cart Drawer & Checkout Form -->
+    <div class="lg:col-span-1 space-y-6">
+        
+        <!-- Cart panel wrapper -->
+        <div class="bg-[#F5E6CA]/60 border border-[#4E342E]/10 rounded-2xl p-5 shadow-md space-y-4">
+            <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-[#4E342E]/10 pb-2 flex items-center justify-between">
+                <span class="flex items-center space-x-1.5">
+                    <i data-lucide="shopping-basket" class="w-4 h-4 text-[#C65D2E]"></i>
+                    <span>Your Basket</span>
+                </span>
+                <span class="h-5 px-2 rounded-full bg-[#C65D2E] text-white text-[10px] font-extrabold flex items-center justify-center" id="cart-badge">0</span>
+            </h3>
+
+            <!-- Cart items container -->
+            <div id="cart-items-list" class="space-y-3 max-h-[240px] overflow-y-auto pr-1">
+                <div class="text-center py-8 text-xs text-slate-500 font-semibold" id="cart-empty-message">
+                    <i data-lucide="shopping-basket" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
+                    Your basket is empty
+                </div>
+            </div>
+
+            <!-- Cart Summary -->
+            <div class="border-t border-[#4E342E]/10 pt-3 space-y-2 text-xs font-semibold">
+                <div class="flex justify-between text-[#4E342E]/70">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">₹0</span>
+                </div>
+                <div class="flex justify-between text-[#4E342E]/70">
+                    <span>Delivery Charge</span>
+                    <span id="cart-shipping">₹0</span>
+                </div>
+                <div class="flex justify-between text-sm font-extrabold text-[#4E342E] border-t border-[#4E342E]/5 pt-2">
+                    <span>Grand Total</span>
+                    <span id="cart-total">₹0</span>
+                </div>
+                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider text-center" id="delivery-tip-banner">
+                    Add ₹500 for FREE delivery!
+                </p>
+            </div>
+        </div>
+
+        <!-- Checkout Form Panel -->
+        <div class="bg-[#F5E6CA]/60 border border-[#4E342E]/10 rounded-2xl p-5 shadow-md">
+            <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider mb-4 border-b border-[#4E342E]/10 pb-2 flex items-center space-x-1.5">
+                <i data-lucide="truck" class="w-4 h-4 text-[#C65D2E]"></i>
+                <span>Checkout Details</span>
+            </h3>
+
+            <form action="/checkout" method="POST" id="checkout-form" onsubmit="return validateCheckoutForm()" class="space-y-4">
+                <input type="hidden" name="cart_data" id="cart-form-input">
+
+                <div>
+                    <label for="customer_name" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Your Name</label>
+                    <input type="text" id="customer_name" name="customer_name" required value="{{ current_user.name if current_user else '' }}" placeholder="Ramesh Mishra" class="w-full px-3 py-2 bg-white/80 border border-[#4E342E]/10 rounded-xl text-xs focus:outline-none focus:border-[#C65D2E] text-[#4E342E]">
+                </div>
+
+                <div>
+                    <label for="mobile" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Mobile Number</label>
+                    <input type="tel" id="mobile" name="mobile" required value="{{ current_user.mobile if current_user else '' }}" placeholder="9876501101" class="w-full px-3 py-2 bg-white/80 border border-[#4E342E]/10 rounded-xl text-xs focus:outline-none focus:border-[#C65D2E] text-[#4E342E]">
+                </div>
+
+                <div>
+                    <label for="address" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Delivery Address</label>
+                    <input type="text" id="address" name="address" required placeholder="House 12, Mishra Tola" class="w-full px-3 py-2 bg-white/80 border border-[#4E342E]/10 rounded-xl text-xs focus:outline-none focus:border-[#C65D2E] text-[#4E342E]">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="village" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Village/Town</label>
+                        <input type="text" id="village" name="village" required placeholder="Rampur" class="w-full px-3 py-2 bg-white/80 border border-[#4E342E]/10 rounded-xl text-xs focus:outline-none focus:border-[#C65D2E] text-[#4E342E]">
+                    </div>
+                    <div>
+                        <label for="pincode" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Pincode</label>
+                        <input type="text" id="pincode" name="pincode" required placeholder="843101" class="w-full px-3 py-2 bg-white/80 border border-[#4E342E]/10 rounded-xl text-xs focus:outline-none focus:border-[#C65D2E] text-[#4E342E]">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="payment_method" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Payment Method</label>
+                    <select id="payment_method" name="payment_method" onchange="togglePaymentSelection()" class="w-full px-3 py-2 bg-white/80 border border-[#4E342E]/10 rounded-xl text-xs focus:outline-none focus:border-[#C65D2E] text-[#4E342E]">
+                        <option value="Cash on Delivery">Cash on Delivery</option>
+                        <option value="UPI">UPI Payment</option>
+                        <option value="QR Payment">Scan & Pay QR</option>
+                        <option value="Razorpay">Razorpay (Online Payment)</option>
+                        {% if current_user and current_user.role == 'Customer' %}
+                        <option value="Khata Credit">Add to Khata (Credit)</option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- UPI/QR Notice banner -->
+                <div id="payment-notice" class="hidden p-3 bg-[#E5A93B]/10 border border-[#E5A93B]/20 rounded-xl text-[10px] text-amber-900 font-semibold leading-relaxed">
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-extrabold rounded-xl text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-green-950/10">
+                    Place Order (COD)
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Panel 2: Customer Order History -->
+{% if current_user and current_user.role == 'Customer' %}
+<div id="panel-orders" class="hidden space-y-6">
+    <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm">
+        <h3 class="text-base font-serif font-bold text-[#4E342E] uppercase mb-4 flex items-center space-x-2">
+            <i data-lucide="package" class="w-5 h-5 text-[#C65D2E]"></i>
+            <span>Your Previous Orders</span>
+        </h3>
+        
+        {% if my_orders|length == 0 %}
+        <div class="text-center py-12 text-slate-500">
+            <i data-lucide="package-open" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i>
+            <p class="text-xs">No orders recorded under your mobile number (+91 {{ current_user.mobile }}).</p>
+        </div>
+        {% else %}
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs font-semibold">
+                <thead>
+                    <tr class="border-b border-[#4E342E]/10 text-[10px] font-bold text-slate-400 uppercase bg-[#F5E6CA]/15">
+                        <th class="px-4 py-3">Order ID</th>
+                        <th class="px-4 py-3">Date</th>
+                        <th class="px-4 py-3">Items Basket</th>
+                        <th class="px-4 py-3">Total Amount</th>
+                        <th class="px-4 py-3">Payment</th>
+                        <th class="px-4 py-3">Delivery Status</th>
+                        <th class="px-4 py-3 text-right">Invoice</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in my_orders %}
+                    <tr class="hover:bg-orange-50/10 border-b border-[#4E342E]/5">
+                        <td class="px-4 py-3 font-mono text-[#C65D2E]">#ORD-{{ order.order_id }}</td>
+                        <td class="px-4 py-3 text-slate-500">{{ order.date }}</td>
+                        <td class="px-4 py-3 text-slate-600 font-normal max-w-xs truncate" title="{{ order.items }}">{{ order.items }}</td>
+                        <td class="px-4 py-3 font-extrabold text-[#4E342E]">₹{{ order.total_amount }}</td>
+                        <td class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase">{{ order.payment_method }}</td>
+                        <td class="px-4 py-3">
+                            {% if order.status == 'Pending' %}
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-600 border border-amber-200">Pending</span>
+                            {% elif order.status == 'Out for Delivery' %}
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-50 text-sky-600 border border-sky-200 animate-pulse">Out for Delivery</span>
+                            {% else %}
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">Delivered</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="/order/{{ order.order_id }}/invoice" target="_blank" class="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 rounded-lg text-[10px] font-bold transition-colors inline-block">
+                                View Bill 🖨️
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tab Panel 3: Customer Personal Khata Ledger -->
+<div id="panel-khata" class="hidden space-y-6">
+    <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-6">
+        
+        <!-- Khata summary details -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-6 border-b border-[#4E342E]/5 pb-6">
+            <div>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Family Credit Ledger Profile</span>
+                <h3 class="text-lg font-bold text-[#4E342E] mt-0.5">{{ my_khata.customer_name }}</h3>
+                <span class="text-[10px] text-slate-500 font-semibold font-mono block mt-0.5">Mobile: +91 {{ my_khata.mobile }}</span>
+            </div>
+            <button onclick="window.print()" class="px-4 py-2 bg-[#F5E6CA] border border-[#E5A93B]/30 text-amber-800 font-bold rounded-xl text-xs flex items-center space-x-1.5 hover:bg-[#ebd8b6] transition-colors shadow-sm">
+                <span>Print statement 🖨️</span>
+            </button>
+        </div>
+
+        <!-- Khata KPI Boxes -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-rose-50/50 border border-rose-200/50 p-4 rounded-xl">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Outstanding Balance</span>
+                <span class="text-2xl font-extrabold text-rose-600 mt-1 block">₹{{ "{:,}".format(my_khata.outstanding_amount) }}</span>
+                <span class="text-[9px] text-slate-400 block mt-1 font-semibold">Total dues to settle</span>
+            </div>
+            
+            <div class="bg-[#F5E6CA]/30 border border-[#E5A93B]/20 p-4 rounded-xl">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Store Credit Limit</span>
+                <span class="text-2xl font-extrabold text-[#4E342E] mt-1 block">₹{{ "{:,}".format(my_khata.credit_limit) }}</span>
+                <span class="text-[9px] text-slate-400 block mt-1 font-semibold">Standard family capacity</span>
+            </div>
+
+            <div class="bg-emerald-50/50 border border-emerald-200/50 p-4 rounded-xl">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Remaining Balance Capacity</span>
+                <span class="text-2xl font-extrabold text-emerald-600 mt-1 block">₹{{ "{:,}".format(my_khata.credit_limit - my_khata.outstanding_amount) }}</span>
+                <span class="text-[9px] text-slate-400 block mt-1 font-semibold">Available for credit checkout</span>
+            </div>
+        </div>
+
+        <!-- Khata Statements -->
+        <div class="space-y-4 pt-2">
+            <h4 class="text-xs font-bold text-[#4E342E] uppercase tracking-wider">Statement of Account Ledger</h4>
+            
+            {% if my_khata.payment_history|length == 0 %}
+            <div class="text-center py-8 text-slate-500 text-xs">
+                <i data-lucide="notebook" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                <p>No transactions have been recorded yet in your Bahi Khata ledger account.</p>
+            </div>
+            {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs font-semibold">
+                    <thead>
+                        <tr class="border-b border-[#4E342E]/10 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-orange-50/30">
+                            <th class="px-4 py-2.5">Date</th>
+                            <th class="px-4 py-2.5">Transaction Type</th>
+                            <th class="px-4 py-2.5">Memo / Description</th>
+                            <th class="px-4 py-2.5 text-right">Amount Charged</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in my_khata.payment_history|reverse %}
+                        <tr class="border-b border-[#4E342E]/5 hover:bg-slate-50/50">
+                            <td class="px-4 py-3 text-slate-500 font-mono">{{ log.date }}</td>
+                            <td class="px-4 py-3">
+                                {% if log.type == 'Purchase' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-200">Purchase Dues</span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">Dues Paid Settle</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-slate-600 font-normal">{{ log.description }}</td>
+                            <td class="px-4 py-3 text-right font-extrabold {% if log.type == 'Purchase' %}text-[#4E342E]{% else %}text-emerald-600{% endif %} font-mono">
+                                {% if log.type == 'Purchase' %}+{% else %}-{% endif %}₹{{ log.amount }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Simulated Razorpay Online Gateway Modal -->
+<div id="razorpay-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+    
+    <!-- Modal Sheet -->
+    <div class="relative w-full max-w-md bg-[#092348] text-white rounded-2xl shadow-2xl overflow-hidden z-10 border border-slate-700/50">
+        <!-- Razorpay branding header -->
+        <div class="bg-[#19355E] p-4 flex justify-between items-center border-b border-slate-700/30">
+            <div class="flex items-center space-x-2">
+                <span class="bg-blue-500 text-white font-bold h-7 w-7 rounded flex items-center justify-center text-sm shadow">R</span>
+                <div>
+                    <h4 class="text-xs font-bold tracking-wide text-blue-400 uppercase">Razorpay Secure</h4>
+                    <span class="text-[9px] text-slate-300 block">Pramod General Store Checkout</span>
+                </div>
+            </div>
+            <button onclick="closeRazorpayModal()" class="text-slate-400 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-5">
+            <!-- Amount Header -->
+            <div class="flex justify-between items-center bg-black/25 p-4 rounded-xl border border-slate-800">
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Amount Payable</span>
+                <span class="text-xl font-extrabold text-[#E5A93B]" id="razorpay-amount-label">₹0</span>
+            </div>
+
+            <!-- Razorpay Interactive Payment Selector tabs -->
+            <div class="space-y-4">
+                <div class="flex border-b border-slate-800 pb-2 gap-4 text-xs font-semibold">
+                    <button class="text-blue-400 border-b-2 border-blue-400 pb-1 font-bold">Credit/Debit Card</button>
+                    <button class="text-slate-400 hover:text-white transition-colors">UPI Netbanking</button>
+                </div>
+
+                <!-- Card Details Input Form -->
+                <div class="space-y-3.5 text-xs">
+                    <div>
+                        <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Card Number</label>
+                        <input type="text" id="rzp-card-no" placeholder="4312 8765 2410 9872" maxlength="19" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white text-xs placeholder:text-slate-600 font-mono">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">Expiry Date</label>
+                            <input type="text" id="rzp-expiry" placeholder="MM/YY" maxlength="5" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white text-xs placeholder:text-slate-600 font-mono text-center">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] uppercase font-bold text-slate-400 mb-1">CVV / CVN</label>
+                            <input type="password" id="rzp-cvv" placeholder="•••" maxlength="3" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white text-xs placeholder:text-slate-600 text-center font-mono">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 pt-1">
+                        <input type="checkbox" id="rzp-save" checked class="rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-0">
+                        <label for="rzp-save" class="text-[10px] text-slate-400 font-semibold select-none">Save card securely for future village payments</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit pay button -->
+            <button onclick="submitRazorpaySimulate()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-lg shadow-blue-950/40 uppercase tracking-wider flex items-center justify-center space-x-1">
+                <span>Pay Dues Online Securely</span>
+            </button>
+            
+            <p class="text-[9px] text-slate-500 text-center font-semibold uppercase">Secured by 256-bit SSL encryption &bull; PCI-DSS Compliant</p>
+        </div>
+
+        <!-- Interactive Processing / Success Overlay Screen inside Modal -->
+        <div id="rzp-status-screen" class="absolute inset-0 bg-[#092348] z-30 hidden flex-col items-center justify-center space-y-4">
+            <!-- Spinner -->
+            <div id="rzp-spinner" class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent shadow-lg"></div>
+            
+            <!-- Success checkmark icon -->
+            <div id="rzp-success-icon" class="hidden h-14 w-14 rounded-full bg-emerald-500 border-2 border-emerald-300 flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-950/20 animate-bounce">
+                ✓
+            </div>
+
+            <h5 class="text-sm font-bold tracking-wide uppercase" id="rzp-status-title">Processing transaction...</h5>
+            <p class="text-[10px] text-slate-400 font-semibold" id="rzp-status-desc">Communicating with bank payment systems.</p>
+        </div>
+    </div>
+</div>
+
+<!-- UPI Payment QR Modal -->
+<div id="qr-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onclick="closeQrModal()"></div>
+    
+    <div class="relative w-full max-w-sm bg-white border border-[#4E342E]/20 rounded-2xl shadow-2xl p-6 z-10 text-center space-y-4">
+        <button onclick="closeQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        
+        <h4 class="text-base font-serif font-bold text-[#4E342E] uppercase">Scan QR to Complete Payment</h4>
+        <p class="text-xs text-slate-500 font-semibold">Pramod General Store Unified Merchant Account</p>
+        
+        <div class="mx-auto w-48 h-48 bg-slate-100 p-2.5 rounded-xl border border-slate-200 flex items-center justify-center relative">
+            <div class="absolute inset-4 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#C65D2E_10px,#C65D2E_20px)]"></div>
+            <div class="h-40 w-40 bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=pramodstore@upi%26pn=Pramod%20General%20Store%26am=100%26cu=INR')] bg-cover relative z-10"></div>
+        </div>
+
+        <div class="bg-orange-50/50 p-3 rounded-xl border border-orange-100 text-[10px] text-orange-900 leading-normal font-semibold">
+            Please make a payment of <span class="font-bold text-base text-[#C65D2E]" id="qr-amount-label">₹0</span>. 
+            Once completed, click the button below to confirm your order details.
+        </div>
+
+        <button onclick="confirmQrPaymentSubmit()" class="w-full py-2.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-extrabold rounded-xl text-xs hover:scale-[1.02] transition-all">
+            Confirm Payment & Place Order
+        </button>
+    </div>
+</div>
+
+<script>
+    // Tab switching for Customer Workspace
+    let activeCustomerTab = "shopping";
+    function switchCustomerTab(tabId) {
+        ["shopping", "orders", "khata"].forEach(tab => {
+            const el = document.getElementById(`panel-${tab}`);
+            if (el) el.classList.add('hidden');
+            
+            const btn = document.getElementById(`cust-nav-${tab}`);
+            if (btn) {
+                btn.className = "px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 text-[#4E342E]/70 hover:bg-[#C65D2E]/5 hover:text-[#C65D2E]";
+            }
+        });
+
+        const activeEl = document.getElementById(`panel-${tabId}`);
+        if (activeEl) activeEl.classList.remove('hidden');
+        
+        const activeBtn = document.getElementById(`cust-nav-${tabId}`);
+        if (activeBtn) {
+            activeBtn.className = "px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-[#C65D2E] text-[#F5E6CA] border border-[#E5A93B]/20 shadow-sm shadow-orange-950/10";
+        }
+        
+        activeCustomerTab = tabId;
+        localStorage.setItem('cust_active_tab', tabId);
+    }
+
+    // Restore active tab on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTab = localStorage.getItem('cust_active_tab') || 'shopping';
+        // Verify tab nav exists before switching
+        if (document.getElementById(`cust-nav-${savedTab}`)) {
+            switchCustomerTab(savedTab);
+        } else {
+            switchCustomerTab('shopping');
+        }
+    });
+
+    // Global references for categories
+    function filterCategory(catName) {
+        const buttons = document.querySelectorAll('#categories-menu button');
+        buttons.forEach(b => {
+            b.className = "w-full text-left px-3 py-2 rounded-xl text-xs font-bold uppercase transition-all duration-200 text-[#4E342E]/80 hover:bg-[#C65D2E]/5 hover:text-[#C65D2E]";
+        });
+
+        const safeId = catName.replace(' & ', '-').replace(' ', '-');
+        const activeBtn = document.getElementById(`cat-${safeId.toLowerCase()}`);
+        if (activeBtn) {
+            activeBtn.className = "w-full text-left px-3 py-2 rounded-xl text-xs font-bold uppercase transition-all duration-200 bg-[#C65D2E]/10 text-[#C65D2E] border border-[#C65D2E]/20";
+        }
+
+        const items = document.querySelectorAll('.product-item-card');
+        let count = 0;
+        
+        items.forEach(item => {
+            const rowCat = item.getAttribute('data-category');
+            if (catName === 'All' || rowCat === catName) {
+                item.style.display = 'block';
+                count++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        document.getElementById('results-count').innerText = `Showing ${count} items`;
+    }
+
+    function searchCatalog() {
+        const query = document.getElementById('catalog-search').value.toLowerCase();
+        const items = document.querySelectorAll('.product-item-card');
+        let count = 0;
+
+        items.forEach(item => {
+            const name = item.getAttribute('data-name').toLowerCase();
+            const cat = item.getAttribute('data-category').toLowerCase();
+            
+            if (name.includes(query) || cat.includes(query)) {
+                item.style.display = 'block';
+                count++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        document.getElementById('results-count').innerText = `Showing ${count} items`;
+    }
+
+    // Festival greeting messages
+    const festivalData = {
+        diwali: {
+            title: "Diwali Shubh Labh Offer! 🪔",
+            desc: "Celebrate Diwali with sweet savings! Flat ₹50 discount on snacks, ghee, and dairy packs."
+        },
+        holi: {
+            title: "Holi Rang Barse Banners! 🎨",
+            desc: "Colors and Joy! Get complimentary herbal gulal pack with every Staples purchase above ₹600."
+        },
+        rakhi: {
+            title: "Raksha Bandhan Bandhan! 🤝",
+            desc: "Sweet bonds! Flat 10% discount on all Sweet snacks and biscuit packs."
+        },
+        chhath: {
+            title: "Chhath Puja Mahaparv Offer! ☀️",
+            desc: "Purity and Devotion! Special discounted prices on Gur (Jaggery), Arwa Rice, and Puja Staples."
+        },
+        durga: {
+            title: "Durga Puja Utsav! 🌸",
+            desc: "Shubho Sharodiya! Special Durga Puja discounts on dry fruits, flour, and tea bundles."
+        }
+    };
+
+    function setFestival(festKey) {
+        const data = festivalData[festKey];
+        if (data) {
+            document.getElementById('fest-title').innerText = data.title;
+            document.getElementById('fest-desc').innerText = data.desc;
+        }
+    }
+</script>
+{% endblock %}

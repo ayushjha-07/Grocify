@@ -1,0 +1,934 @@
+{% extends 'base.html' %}
+
+{% block title %}Store Console - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    
+    <!-- Left Column: Admin Navigation Sidebar -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-[#F5E6CA]/60 border border-[#4E342E]/10 rounded-2xl p-5 shadow-md">
+            <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider mb-4 border-b border-[#4E342E]/10 pb-2 flex items-center space-x-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-[#C65D2E]"></i>
+                <span>Admin Console</span>
+            </h3>
+            
+            <nav class="space-y-1.5" id="admin-menu">
+                <button onclick="switchAdminTab('overview')" id="nav-overview" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        <span>Dashboard</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('inventory')" id="nav-inventory" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="package" class="w-4 h-4"></i>
+                        <span>Inventory Catalog</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('ledger')" id="nav-ledger" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="notebook-pen" class="w-4 h-4"></i>
+                        <span>Khata Ledger</span>
+                    </span>
+                </button>
+                
+                {% if current_user.role == 'Owner' %}
+                <button onclick="switchAdminTab('deliveries')" id="nav-deliveries" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="truck" class="w-4 h-4"></i>
+                        <span>Deliveries</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('analytics')" id="nav-analytics" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="trending-up" class="w-4 h-4"></i>
+                        <span>P&L & AI Forecast</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('settings')" id="nav-settings" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>System Settings</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('whatsapp')" id="nav-whatsapp" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                        <span>WhatsApp Alerts</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('audit')" id="nav-audit" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="shield" class="w-4 h-4"></i>
+                        <span>Audit Trails</span>
+                    </span>
+                </button>
+                {% endif %}
+            </nav>
+        </div>
+
+        <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100/50 text-[10px] text-orange-900 font-semibold leading-relaxed">
+            <span class="font-bold text-[#C65D2E] block mb-1">Traditional Kirana Bookkeeping</span>
+            Role: <span class="font-bold text-slate-700">{{ current_user.role }}</span>. 
+            {% if current_user.role == 'Clerk' %}
+            You have access to record purchases, update stocks, and manage ledger balances. Settings, backups, and deletes require Owner permission.
+            {% else %}
+            Full administrative access. Manage staff roles, configure credit caps, and process system database restorations.
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Sub-views Panel -->
+    <div class="lg:col-span-3 space-y-6">
+        
+        <!-- Tab 1: Overview & Sales Charts -->
+        <section id="tab-overview" class="space-y-6">
+            <!-- Stats Ribbon -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-xs font-semibold">
+                <div class="bg-[#F5E6CA]/30 border border-[#C65D2E]/20 p-4 rounded-xl flex flex-col justify-between">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Total Products</span>
+                    <span class="text-lg font-extrabold text-[#4E342E] mt-1">{{ stats.total_products }} Items</span>
+                </div>
+                <div class="bg-[#F5E6CA]/30 border border-[#C65D2E]/20 p-4 rounded-xl flex flex-col justify-between">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Daily Orders</span>
+                    <span class="text-lg font-extrabold text-[#2E7D32] mt-1">{{ stats.daily_orders }} Orders</span>
+                </div>
+                <div class="bg-[#F5E6CA]/30 border border-[#C65D2E]/20 p-4 rounded-xl flex flex-col justify-between">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Monthly Revenue</span>
+                    <span class="text-lg font-extrabold text-[#4E342E] mt-1">₹{{ "{:,}".format(stats.monthly_revenue) }}</span>
+                </div>
+                <div class="bg-[#F5E6CA]/30 border border-[#C65D2E]/20 p-4 rounded-xl flex flex-col justify-between">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Outstanding Khata</span>
+                    <span class="text-lg font-extrabold text-rose-600 mt-1">₹{{ "{:,}".format(stats.total_khata_credit) }}</span>
+                </div>
+                <div class="bg-[#F5E6CA]/30 border border-[#C65D2E]/20 p-4 rounded-xl flex flex-col justify-between">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Low Stock items</span>
+                    <span class="text-lg font-extrabold text-amber-600 mt-1">{{ stats.low_stock_items }} Alerts</span>
+                </div>
+            </div>
+
+            <!-- Sales Charts (Vibrant Premium Chart.js with Revenue and Profit) -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-4">
+                <div class="flex justify-between items-center border-b border-[#4E342E]/5 pb-3">
+                    <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider">Financial Performance (Last 30 Days)</h3>
+                    <div class="flex items-center space-x-4 text-[10px] font-bold uppercase">
+                        <span class="flex items-center space-x-1.5"><span class="h-2 w-2 rounded-full bg-[#C65D2E]"></span><span>Revenue</span></span>
+                        <span class="flex items-center space-x-1.5"><span class="h-2 w-2 rounded-full bg-[#2E7D32]"></span><span>Net Profit</span></span>
+                    </div>
+                </div>
+                
+                <div class="relative w-full h-[320px]">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Inventory CRUD Manager -->
+        <section id="tab-inventory" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-base font-bold text-[#4E342E]">Stock & Inventory Logs</h3>
+                    <p class="text-xs text-slate-400">Manage products, unit costs, pricing margins, and supplier tracking.</p>
+                </div>
+                <button onclick="openAddProductModal()" class="px-4 py-2 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-xl text-xs flex items-center space-x-1 transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Add Item</span>
+                </button>
+            </div>
+
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs font-semibold">
+                    <thead>
+                        <tr class="border-b border-[#4E342E]/10 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-[#F5E6CA]/10">
+                            <th class="px-4 py-3">Product Name</th>
+                            <th class="px-4 py-3">Category</th>
+                            <th class="px-4 py-3">Cost Price</th>
+                            <th class="px-4 py-3">Selling Price</th>
+                            <th class="px-4 py-3">Margin</th>
+                            <th class="px-4 py-3">Stock Cover</th>
+                            <th class="px-4 py-3">Supplier</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        {% set cost = product.cost_price if product.cost_price else (product.price * 0.8)|int %}
+                        {% set profit = product.price - cost %}
+                        {% set margin = (((profit / product.price) * 100)|round(1)) if product.price > 0 else 0 %}
+                        <tr class="hover:bg-orange-50/20 border-b border-[#4E342E]/5">
+                            <td class="px-4 py-3">
+                                <h4 class="font-bold text-[#4E342E]">{{ product.name }}</h4>
+                                <span class="text-[10px] text-slate-500 block">ID: #PS-{{ "%03d"|format(product.id) }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 uppercase text-[10px]">{{ product.category }}</td>
+                            <td class="px-4 py-3 font-mono text-slate-600">₹{{ cost }}</td>
+                            <td class="px-4 py-3 font-extrabold text-[#4E342E]">₹{{ product.price }}</td>
+                            <td class="px-4 py-3 text-emerald-600 font-extrabold font-mono">{{ margin }}%</td>
+                            <td class="px-4 py-3">
+                                {% if product.stock == 0 %}
+                                <span class="text-rose-600 font-extrabold block">Out of Stock</span>
+                                {% elif product.stock < 10 %}
+                                <span class="text-amber-600 font-extrabold block">{{ product.stock }} units (Low)</span>
+                                {% else %}
+                                <span class="text-[#2E7D32] block">{{ product.stock }} units</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 font-medium">{{ product.supplier if product.supplier else 'Local Market' }}</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end space-x-1.5">
+                                    <button onclick="openEditProductModal({{ product.id }}, '{{ product.name }}', '{{ product.category }}', {{ product.price }}, {{ cost }}, {{ product.stock }}, '{{ product.supplier }}')" class="h-7 w-7 bg-[#F5E6CA] border border-[#E5A93B]/30 hover:border-amber-500 rounded-lg flex items-center justify-center text-amber-700 hover:text-amber-800 transition-colors">
+                                        <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    
+                                    {% if current_user.role == 'Owner' %}
+                                    <form action="/admin/delete_product/{{ product.id }}" method="POST" class="inline" onsubmit="return confirm('Remove product from inventory catalog?');">
+                                        <button type="submit" class="h-7 w-7 bg-rose-50 border border-rose-200 hover:border-rose-300 rounded-lg flex items-center justify-center text-rose-600 hover:text-rose-700 transition-colors">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <button disabled title="Only Owner can delete products" class="h-7 w-7 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-300 cursor-not-allowed">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab 3: Customer Credit Khata Ledger -->
+        <section id="tab-ledger" class="hidden space-y-6">
+            <div>
+                <h3 class="text-base font-bold text-[#4E342E]">Bahi Khata Ledger (Bazaar Credit)</h3>
+                <p class="text-xs text-slate-400">Track outstanding family store accounts, edit individual credit limits, and record manual settlements.</p>
+            </div>
+
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-6 overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs font-semibold">
+                    <thead>
+                        <tr class="border-b border-[#4E342E]/10 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-[#F5E6CA]/10">
+                            <th class="px-4 py-3">Customer Account</th>
+                            <th class="px-4 py-3">Mobile Number</th>
+                            <th class="px-4 py-3">Outstanding Credit</th>
+                            <th class="px-4 py-3">Credit Limit</th>
+                            <th class="px-4 py-3">Remaining Capacity</th>
+                            <th class="px-4 py-3">Ledger History Preview</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in khata %}
+                        {% set limit = account.credit_limit if account.credit_limit else settings.default_credit_limit %}
+                        {% set remaining = limit - account.outstanding_amount %}
+                        <tr class="hover:bg-orange-50/20 border-b border-[#4E342E]/5">
+                            <td class="px-4 py-3">
+                                <h4 class="font-bold text-[#4E342E]">{{ account.customer_name }}</h4>
+                            </td>
+                            <td class="px-4 py-3 font-mono text-slate-500">{{ account.mobile }}</td>
+                            <td class="px-4 py-3 font-extrabold {% if account.outstanding_amount > 0 %}text-rose-600{% else %}text-[#2E7D32]{% endif %}">
+                                ₹{{ "{:,}".format(account.outstanding_amount) }}
+                            </td>
+                            <td class="px-4 py-3 font-mono text-slate-600">₹{{ "{:,}".format(limit) }}</td>
+                            <td class="px-4 py-3 font-mono text-emerald-600">₹{{ "{:,}".format(remaining) }}</td>
+                            <td class="px-4 py-3 max-w-xs">
+                                <div class="text-[10px] text-slate-500 font-normal truncate">
+                                    {% for log in account.payment_history|reverse %}
+                                    &bull; {{ log.date }} ({{ log.type }}): ₹{{ log.amount }} &middot;
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <button onclick="openKhataModal('{{ account.customer_name }}', '{{ account.mobile }}', {{ account.outstanding_amount }}, {{ limit }})" class="px-3.5 py-1.5 bg-[#F5E6CA] border border-[#E5A93B]/30 hover:border-amber-500 text-amber-700 font-bold rounded-lg text-[10px] transition-all">
+                                    Manage Ledger
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {% if current_user.role == 'Owner' %}
+        <!-- Tab 4: Delivery Tracking Logs -->
+        <section id="tab-deliveries" class="hidden space-y-6">
+            <div>
+                <h3 class="text-base font-bold text-[#4E342E]">Home Delivery Management</h3>
+                <p class="text-xs text-slate-400">Assign orders to delivery partners and monitor delivery cycles.</p>
+            </div>
+
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs font-semibold">
+                    <thead>
+                        <tr class="border-b border-[#4E342E]/10 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-[#F5E6CA]/10">
+                            <th class="px-4 py-3">Order ID</th>
+                            <th class="px-4 py-3">Customer & Address</th>
+                            <th class="px-4 py-3">Items Purchased</th>
+                            <th class="px-4 py-3">Amount</th>
+                            <th class="px-4 py-3">Payment</th>
+                            <th class="px-4 py-3">Delivery Partner</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3 text-right">Update Allocation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr class="hover:bg-orange-50/20 border-b border-[#4E342E]/5">
+                            <td class="px-4 py-3 text-xs font-mono text-slate-400">#ORD-{{ order.order_id }}</td>
+                            <td class="px-4 py-3">
+                                <h4 class="font-bold text-[#4E342E]">{{ order.customer_name }}</h4>
+                                <span class="text-[10px] text-slate-500 block">{{ order.address }}, {{ order.village }} ({{ order.pincode }})</span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 font-normal max-w-xs truncate">{{ order.items }}</td>
+                            <td class="px-4 py-3 font-bold text-[#4E342E]">₹{{ order.total_amount }}</td>
+                            <td class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">{{ order.payment_method }}</td>
+                            <td class="px-4 py-3 font-medium text-slate-700">
+                                {% if order.delivery_boy_id %}
+                                    {% set boy = delivery_boys|selectattr('id', 'equalto', order.delivery_boy_id)|first %}
+                                    {{ boy.name if boy else 'Sanjay Kumar' }}
+                                {% else %}
+                                    <span class="text-rose-500 font-bold">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if order.status == 'Pending' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-600 border border-amber-200">Pending</span>
+                                {% elif order.status == 'Out for Delivery' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-50 text-sky-600 border border-sky-200 animate-pulse">Out for Delivery</span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">Delivered</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <form action="/admin/update_delivery/{{ order.order_id }}" method="POST" class="flex items-center justify-end space-x-2">
+                                    <select name="delivery_boy_id" class="px-2 py-1 bg-orange-50/50 border border-slate-200 rounded-lg text-[10px] font-semibold focus:outline-none focus:border-[#C65D2E]">
+                                        <option value="">Choose Boy</option>
+                                        {% for boy in delivery_boys %}
+                                        <option value="{{ boy.id }}" {% if order.delivery_boy_id == boy.id %}selected{% endif %}>{{ boy.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    
+                                    <select name="status" class="px-2 py-1 bg-orange-50/50 border border-slate-200 rounded-lg text-[10px] font-semibold focus:outline-none focus:border-[#C65D2E]">
+                                        <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                        <option value="Out for Delivery" {% if order.status == 'Out for Delivery' %}selected{% endif %}>Out</option>
+                                        <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                    </select>
+                                    
+                                    <button type="submit" class="p-1.5 bg-[#C65D2E] text-white hover:bg-orange-700 rounded-lg transition-colors">
+                                        <i data-lucide="check" class="w-3 h-3"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab 5: Analytics and AI Forecasting -->
+        <section id="tab-analytics" class="hidden space-y-6">
+            <!-- P&L Analytics -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-5">
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase border-b border-[#4E342E]/5 pb-3">Profit & Loss Balance Sheet</h3>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-semibold">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-wider block">Total Sales Revenue</span>
+                        <span class="text-xl font-extrabold text-[#4E342E] mt-1 block">₹{{ "{:,}".format(pl.revenue) }}</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="text-[9px] text-slate-500 uppercase tracking-wider block">Cost of Goods Sold (COGS)</span>
+                        <span class="text-xl font-extrabold text-slate-700 mt-1 block">₹{{ "{:,}".format(pl.cogs) }}</span>
+                    </div>
+                    <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50">
+                        <span class="text-[9px] text-emerald-700 uppercase tracking-wider block">Net Gross Profit</span>
+                        <span class="text-xl font-extrabold text-[#2E7D32] mt-1 block">₹{{ "{:,}".format(pl.profit) }}</span>
+                    </div>
+                    <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50">
+                        <span class="text-[9px] text-emerald-700 uppercase tracking-wider block">Average Profit Margin</span>
+                        <span class="text-xl font-extrabold text-[#2E7D32] mt-1 block">{{ pl.margin }}%</span>
+                    </div>
+                </div>
+
+                <!-- Category margins -->
+                <div class="pt-2">
+                    <h4 class="text-xs font-bold text-[#4E342E] uppercase tracking-wider mb-2.5">Category Wise Margins</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs font-semibold">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-[10px] text-slate-400 uppercase tracking-wider">
+                                    <th class="py-2">Category</th>
+                                    <th class="py-2 text-right">Revenue Sold</th>
+                                    <th class="py-2 text-right">Product Cost</th>
+                                    <th class="py-2 text-right">Gross Profit</th>
+                                    <th class="py-2 text-right">Margin %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for name, values in pl.categories.items() %}
+                                <tr class="border-b border-slate-50 text-slate-600">
+                                    <td class="py-2.5 font-bold text-[#4E342E]">{{ name }}</td>
+                                    <td class="py-2.5 text-right font-mono">₹{{ "{:,}".format(values.revenue) }}</td>
+                                    <td class="py-2.5 text-right font-mono text-slate-500">₹{{ "{:,}".format(values.cogs) }}</td>
+                                    <td class="py-2.5 text-right font-mono text-[#2E7D32]">₹{{ "{:,}".format(values.profit) }}</td>
+                                    <td class="py-2.5 text-right font-mono font-bold text-[#2E7D32]">{{ values.margin }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Inventory Forecasting -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-4">
+                <div class="border-b border-[#4E342E]/5 pb-3">
+                    <h3 class="text-sm font-bold text-[#4E342E] uppercase">AI-Powered 30-Day Inventory Forecast</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Calculated using 30-day moving average rates of sale. Automatically flags order triggers.</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-semibold">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[10px] text-slate-400 uppercase tracking-wider">
+                                <th class="py-2">Item Name</th>
+                                <th class="py-2 text-center">Stock</th>
+                                <th class="py-2 text-center">Daily Sale Rate</th>
+                                <th class="py-2 text-center">Projected Demand</th>
+                                <th class="py-2 text-center">Stock Cover (Days)</th>
+                                <th class="py-2 text-center">Reorder Status</th>
+                                <th class="py-2 text-right">Reorder Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in forecast %}
+                            <tr class="border-b border-slate-50 text-slate-600">
+                                <td class="py-3 font-bold text-[#4E342E]">
+                                    {{ item.name }}
+                                    <span class="text-[9px] text-slate-400 block font-normal">Supplier: {{ item.supplier }}</span>
+                                </td>
+                                <td class="py-3 text-center font-mono">{{ item.stock }}</td>
+                                <td class="py-3 text-center font-mono text-[#C65D2E]">{{ item.daily_rate }} /day</td>
+                                <td class="py-3 text-center font-mono">{{ item.projected_demand }} units</td>
+                                <td class="py-3 text-center font-mono">{{ item.cover_days }} days</td>
+                                <td class="py-3 text-center">
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-{{ item.color }}-50 text-{{ item.color }}-600 border border-{{ item.color }}-200">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                                <td class="py-3 text-right font-extrabold text-[#4E342E] font-mono">
+                                    {% if item.reorder_qty > 0 %}
+                                    <span class="text-rose-600">{{ item.reorder_qty }} units</span>
+                                    {% else %}
+                                    <span class="text-emerald-600">0 (OK)</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 6: Reset defaults & Settings -->
+        <section id="tab-settings" class="hidden space-y-6">
+            <!-- Global Store Settings -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-bold text-[#4E342E] border-b border-[#4E342E]/5 pb-3">Global Store Settings</h3>
+                
+                <form action="/admin/update_settings" method="POST" class="space-y-4 text-xs font-semibold">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="store_name" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Store Brand Name</label>
+                            <input type="text" id="store_name" name="store_name" value="{{ settings.store_name }}" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                        </div>
+                        <div>
+                            <label for="tagline" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Store Tagline</label>
+                            <input type="text" id="tagline" name="tagline" value="{{ settings.tagline }}" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label for="delivery_charge" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Standard Delivery Fee (₹)</label>
+                            <input type="number" id="delivery_charge" name="delivery_charge" value="{{ settings.delivery_charge }}" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                        </div>
+                        <div>
+                            <label for="free_delivery_threshold" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Free Delivery Threshold (₹)</label>
+                            <input type="number" id="free_delivery_threshold" name="free_delivery_threshold" value="{{ settings.free_delivery_threshold }}" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                        </div>
+                        <div>
+                            <label for="default_credit_limit" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Standard Khata Credit Limit (₹)</label>
+                            <input type="number" id="default_credit_limit" name="default_credit_limit" value="{{ settings.default_credit_limit }}" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2.5 pt-2">
+                        <input type="checkbox" id="whatsapp_enabled" name="whatsapp_enabled" {% if settings.whatsapp_enabled %}checked{% endif %} class="rounded bg-orange-50/50 border-[#4E342E]/10 text-[#C65D2E] focus:ring-0">
+                        <label for="whatsapp_enabled" class="text-slate-600 font-bold select-none">Enable simulated WhatsApp message updates (dispatch alerts & khata changes)</label>
+                    </div>
+
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-bold rounded-xl hover:scale-[1.01] transition-all shadow-md">
+                        Save System Settings
+                    </button>
+                </form>
+            </div>
+
+            <!-- Database Backups and Recovery -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-5">
+                <h3 class="text-sm font-bold text-[#4E342E] border-b border-[#4E342E]/5 pb-3">Automated Database backups & Recovery</h3>
+                <p class="text-xs text-slate-400">Pramod General Store stores database structures in server cache memory. Maintain data persistence by downloading backups locally.</p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-semibold">
+                    <div class="p-4 bg-orange-50/20 border border-orange-100 rounded-xl space-y-3">
+                        <h4 class="font-bold text-[#C65D2E]">Download Database State</h4>
+                        <p class="text-slate-500 leading-normal font-normal">Export complete products catalogs, audit registry, WhatsApp logs, customer ledger limits, and settings data to a single JSON recovery file.</p>
+                        <a href="/admin/backup" class="px-4 py-2 bg-[#C65D2E] hover:bg-orange-700 text-[#F5E6CA] font-bold rounded-xl transition-colors inline-block shadow-sm">
+                            Download Backup (.json)
+                        </a>
+                    </div>
+                    
+                    <div class="p-4 bg-orange-50/20 border border-orange-100 rounded-xl space-y-3">
+                        <h4 class="font-bold text-[#C65D2E]">Upload & Restore Backup</h4>
+                        <p class="text-slate-500 leading-normal font-normal">Select a previously exported JSON backup file to override current server cache memory structures instantly.</p>
+                        
+                        <form action="/admin/restore" method="POST" enctype="multipart/form-data" class="flex flex-col space-y-2">
+                            <input type="file" name="backup_file" required accept=".json" class="text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border file:border-slate-300 file:text-[10px] file:font-bold file:bg-[#F5E6CA] file:text-amber-800 hover:file:bg-[#ebd8b6]">
+                            <button type="submit" class="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold rounded-xl transition-colors self-start shadow-sm">
+                                Restore Database File
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Factory reset -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-bold text-[#4E342E] border-b border-[#4E342E]/5 pb-3 text-rose-600">Factory resets</h3>
+                <p class="text-xs text-slate-400">Restore default products catalogs, outstanding family debts, and default settings templates back to initial values.</p>
+                
+                <form action="/admin/reset" method="POST" onsubmit="return confirm('Restore all database structures back to factory resets? This will wipe all current transactions and audit logs!');">
+                    <button type="submit" class="px-5 py-2.5 bg-rose-50 hover:bg-rose-100/50 border border-rose-200 text-rose-600 font-bold rounded-xl text-xs transition-all shadow-sm">
+                        Reset System Presets
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tab 7: WhatsApp Log Messages queue -->
+        <section id="tab-whatsapp" class="hidden space-y-6">
+            <div>
+                <h3 class="text-base font-bold text-[#4E342E]">WhatsApp Notice Logs (Simulated Engine)</h3>
+                <p class="text-xs text-slate-400 font-medium">Logs of outbound customer notifications triggered on order placement, updates, and credit account adjustments.</p>
+            </div>
+
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-4 max-h-[500px] overflow-y-auto">
+                {% if whatsapp_logs|length == 0 %}
+                <div class="text-center py-12 text-slate-400 text-xs">
+                    <i data-lucide="message-square-off" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                    <p>No messages have been dispatched yet.</p>
+                </div>
+                {% else %}
+                <div class="space-y-4">
+                    {% for sms in whatsapp_logs %}
+                    <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold space-y-1">
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="text-slate-500 font-mono">To: +91 {{ sms.mobile }}</span>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-mono text-slate-400">{{ sms.timestamp }}</span>
+                                <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold text-[8px] uppercase">{{ sms.status }}</span>
+                            </div>
+                        </div>
+                        <p class="text-slate-700 font-normal leading-normal">{{ sms.message }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Tab 8: Security Audit Logs -->
+        <section id="tab-audit" class="hidden space-y-6">
+            <div>
+                <h3 class="text-base font-bold text-[#4E342E]">Security Audit Logs</h3>
+                <p class="text-xs text-slate-400">Traceable actions recorded for product additions, price edits, ledger collections, and database restores.</p>
+            </div>
+
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs font-semibold">
+                    <thead>
+                        <tr class="border-b border-[#4E342E]/10 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-[#F5E6CA]/10">
+                            <th class="px-4 py-3">Timestamp</th>
+                            <th class="px-4 py-3">User</th>
+                            <th class="px-4 py-3">Role</th>
+                            <th class="px-4 py-3">Action Type</th>
+                            <th class="px-4 py-3">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in audit_logs %}
+                        <tr class="hover:bg-orange-50/20 border-b border-[#4E342E]/5 text-slate-600">
+                            <td class="px-4 py-3 font-mono text-slate-500 text-[10px]">{{ log.timestamp }}</td>
+                            <td class="px-4 py-3 font-bold text-[#4E342E]">{{ log.user }}</td>
+                            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[9px] font-bold">{{ log.role }}</span></td>
+                            <td class="px-4 py-3 font-bold text-[#C65D2E] text-[10px] uppercase">{{ log.action }}</td>
+                            <td class="px-4 py-3 font-normal max-w-sm truncate" title="{{ log.details }}">{{ log.details }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="add-product-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onclick="closeAddProductModal()"></div>
+    
+    <div class="relative w-full max-w-md bg-white border border-[#4E342E]/20 rounded-2xl shadow-2xl p-6 z-10 space-y-4">
+        <button onclick="closeAddProductModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        
+        <h4 class="text-base font-serif font-bold text-[#4E342E] uppercase border-b border-orange-50 pb-2">Add New Product</h4>
+        
+        <form action="/admin/add_product" method="POST" class="space-y-4 text-xs font-semibold">
+            <div>
+                <label for="add-name" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Product Name</label>
+                <input type="text" id="add-name" name="name" required placeholder="Tata Salt Premium (1kg)" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+            </div>
+
+            <div>
+                <label for="add-category" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
+                <select id="add-category" name="category" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label for="add-cost" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cost Price (₹)</label>
+                    <input type="number" id="add-cost" name="cost_price" required min="1" placeholder="40" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+                <div>
+                    <label for="add-price" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sale Price (₹)</label>
+                    <input type="number" id="add-price" name="price" required min="1" placeholder="50" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+                <div>
+                    <label for="add-stock" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stock Qty</label>
+                    <input type="number" id="add-stock" name="stock" required min="0" placeholder="20" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+            </div>
+
+            <div>
+                <label for="add-supplier" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Supplier / Vendor</label>
+                <input type="text" id="add-supplier" name="supplier" required placeholder="Hindustan Unilever" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-xl hover:scale-[1.01] transition-all">
+                Add to Inventory
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="edit-product-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onclick="closeEditProductModal()"></div>
+    
+    <div class="relative w-full max-w-md bg-white border border-[#4E342E]/20 rounded-2xl shadow-2xl p-6 z-10 space-y-4">
+        <button onclick="closeEditProductModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        
+        <h4 class="text-base font-serif font-bold text-[#4E342E] uppercase border-b border-orange-50 pb-2">Edit Product details</h4>
+        
+        <form action="" method="POST" id="edit-product-form" class="space-y-4 text-xs font-semibold">
+            <div>
+                <label for="edit-name" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Product Name</label>
+                <input type="text" id="edit-name" name="name" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+            </div>
+
+            <div>
+                <label for="edit-category" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
+                <select id="edit-category" name="category" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label for="edit-cost" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cost Price (₹)</label>
+                    <input type="number" id="edit-cost" name="cost_price" required min="1" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+                <div>
+                    <label for="edit-price" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sale Price (₹)</label>
+                    <input type="number" id="edit-price" name="price" required min="1" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+                <div>
+                    <label for="edit-stock" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stock Qty</label>
+                    <input type="number" id="edit-stock" name="stock" required min="0" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+            </div>
+
+            <div>
+                <label for="edit-supplier" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Supplier / Vendor</label>
+                <input type="text" id="edit-supplier" name="supplier" required class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-xl hover:scale-[1.01] transition-all">
+                Save Product Changes
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Manage Khata Account Modal -->
+<div id="khata-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onclick="closeKhataModal()"></div>
+    
+    <div class="relative w-full max-w-md bg-white border border-[#4E342E]/20 rounded-2xl shadow-2xl p-6 z-10 space-y-4">
+        <button onclick="closeKhataModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        
+        <h4 class="text-base font-serif font-bold text-[#4E342E] uppercase border-b border-orange-50 pb-2">Record Khata Transaction</h4>
+        <div class="p-3 bg-orange-50/40 border border-orange-100 rounded-xl">
+            <h5 class="text-xs font-bold text-[#4E342E]" id="khata-modal-name">Ramesh Mishra</h5>
+            <span class="text-[10px] text-slate-500 block" id="khata-modal-mobile">Mobile: 9876501101</span>
+            <span class="text-xs font-bold text-rose-600 block mt-1">Outstanding Balance: <span id="khata-modal-dues">₹0</span></span>
+        </div>
+        
+        <form action="" method="POST" id="khata-form" class="space-y-4 text-xs font-semibold">
+            <div>
+                <label for="khata-action" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Transaction Action</label>
+                <select id="khata-action" name="action_type" onchange="toggleKhataActionFields()" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                    <option value="Payment">Record Payment Receipt (Customer Pays Us)</option>
+                    <option value="Purchase">Record Credit Purchase (Customer Borrows)</option>
+                    <option value="Update Limit">Update Dues Limit (Limit Change)</option>
+                </select>
+            </div>
+
+            <!-- Standard Transaction Fields -->
+            <div id="khata-tx-fields" class="space-y-4">
+                <div>
+                    <label for="khata-amount" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Amount (₹)</label>
+                    <input type="number" id="khata-amount" name="amount" min="1" placeholder="500" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+
+                <div>
+                    <label for="khata-desc" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Description / Memo</label>
+                    <input type="text" id="khata-desc" name="description" placeholder="Ghee & Biscuit box purchase" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+            </div>
+
+            <!-- Limit Configuration Fields -->
+            <div id="khata-limit-fields" class="hidden">
+                <div>
+                    <label for="khata-limit" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">New Credit Limit (₹)</label>
+                    <input type="number" id="khata-limit" name="credit_limit" min="100" class="w-full px-3 py-2 bg-orange-50/30 border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-xl hover:scale-[1.01] transition-all">
+                Submit Ledger Entry
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const salesData = {{ sales_json | safe }};
+    
+    // Switch tabs on admin dashboard
+    let activeAdminTab = "overview";
+    function switchAdminTab(tabId) {
+        // Clear all views
+        ["overview", "inventory", "ledger", "deliveries", "analytics", "settings", "whatsapp", "audit"].forEach(tab => {
+            const el = document.getElementById(`tab-${tab}`);
+            if (el) el.classList.add('hidden');
+            
+            const btn = document.getElementById(`nav-${tab}`);
+            if (btn) {
+                btn.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 text-[#4E342E]/75 hover:bg-[#C65D2E]/5 hover:text-[#C65D2E]";
+            }
+        });
+
+        const activeEl = document.getElementById(`tab-${tabId}`);
+        if (activeEl) activeEl.classList.remove('hidden');
+        
+        const activeBtn = document.getElementById(`nav-${tabId}`);
+        if (activeBtn) {
+            activeBtn.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 bg-[#C65D2E]/15 text-[#C65D2E] border-l-4 border-[#C65D2E] shadow-sm";
+        }
+        
+        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+        window.history.pushState({path:newurl}, '', newurl);
+        
+        activeAdminTab = tabId;
+        localStorage.setItem('admin_active_tab', tabId);
+    }
+
+    // Modal Add Product handlers
+    function openAddProductModal() {
+        document.getElementById('add-product-modal').classList.remove('hidden');
+    }
+    function closeAddProductModal() {
+        document.getElementById('add-product-modal').classList.add('hidden');
+    }
+
+    // Modal Edit Product handlers
+    function openEditProductModal(id, name, cat, price, cost, stock, supplier) {
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-category').value = cat;
+        document.getElementById('edit-price').value = price;
+        document.getElementById('edit-cost').value = cost;
+        document.getElementById('edit-stock').value = stock;
+        document.getElementById('edit-supplier').value = supplier;
+        
+        document.getElementById('edit-product-form').action = `/admin/edit_product/${id}`;
+        document.getElementById('edit-product-modal').classList.remove('hidden');
+    }
+    function closeEditProductModal() {
+        document.getElementById('edit-product-modal').classList.add('hidden');
+    }
+
+    // Modal Khata Ledger handlers
+    function openKhataModal(name, mobile, dues, limit) {
+        document.getElementById('khata-modal-name').innerText = name;
+        document.getElementById('khata-modal-mobile').innerText = `Mobile: ${mobile}`;
+        document.getElementById('khata-modal-dues').innerText = `₹${dues.toLocaleString()}`;
+        document.getElementById('khata-limit').value = limit;
+        
+        document.getElementById('khata-form').action = `/admin/update_khata/${mobile}`;
+        document.getElementById('khata-modal').classList.remove('hidden');
+        
+        // Reset modal view
+        document.getElementById('khata-action').value = "Payment";
+        toggleKhataActionFields();
+    }
+    function closeKhataModal() {
+        document.getElementById('khata-modal').classList.add('hidden');
+    }
+
+    function toggleKhataActionFields() {
+        const action = document.getElementById('khata-action').value;
+        const txFields = document.getElementById('khata-tx-fields');
+        const limitFields = document.getElementById('khata-limit-fields');
+        
+        const amountInp = document.getElementById('khata-amount');
+        const descInp = document.getElementById('khata-desc');
+        const limitInp = document.getElementById('khata-limit');
+        
+        if (action === "Update Limit") {
+            txFields.classList.add('hidden');
+            limitFields.classList.remove('hidden');
+            amountInp.required = false;
+            descInp.required = false;
+            limitInp.required = true;
+        } else {
+            txFields.classList.remove('hidden');
+            limitFields.classList.add('hidden');
+            amountInp.required = true;
+            descInp.required = true;
+            limitInp.required = false;
+        }
+    }
+
+    // Render sales chart
+    document.addEventListener('DOMContentLoaded', () => {
+        // Parse tabs from query param or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeUrlTab = urlParams.get('tab') || localStorage.getItem('admin_active_tab') || 'overview';
+        switchAdminTab(activeUrlTab);
+
+        // Map Chart.js canvas
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const labels = salesData.map(day => day.date.substring(5)); // Show MM-DD
+        const revenues = salesData.map(day => day.revenue);
+        const profits = salesData.map(day => day.profit);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Daily Revenue (₹)',
+                        data: revenues,
+                        borderColor: '#C65D2E',
+                        backgroundColor: 'rgba(198, 93, 46, 0.05)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#4E342E',
+                        pointBorderColor: '#E5A93B',
+                        pointRadius: 2.5
+                    },
+                    {
+                        label: 'Daily Profit (₹)',
+                        data: profits,
+                        borderColor: '#2E7D32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#1B5E20',
+                        pointBorderColor: '#E5A93B',
+                        pointRadius: 2.5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            color: 'rgba(78, 52, 46, 0.05)'
+                        },
+                        ticks: {
+                            color: '#4E342E',
+                            font: {
+                                size: 10,
+                                family: 'Plus Jakarta Sans'
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#4E342E',
+                            font: {
+                                size: 9,
+                                family: 'Plus Jakarta Sans'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-orange-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Marcellus (Heritage Serif) and Plus Jakarta Sans (Clean Sans) -->
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js CDN for Admin Sales Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="flex flex-col min-h-screen text-[#4E342E] antialiased">
+
+    <!-- Flash message alerts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+          {% for category, message in messages %}
+            <div class="p-4 rounded-xl shadow-lg border text-sm font-bold flex items-center justify-between transition-all duration-300
+                        {% if category == 'success' %}
+                          bg-emerald-50 text-emerald-700 border-emerald-200
+                        {% else %}
+                          bg-rose-50 text-rose-700 border-rose-200
+                        {% endif %}" id="flash-message">
+              <span>{{ message }}</span>
+              <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Traditional Shop Signboard Header -->
+    <header class="w-full shrink-0 z-40 bg-[#4E342E] relative overflow-hidden shadow-2xl">
+        <!-- Signboard Wood texture outline and gold frame -->
+        <div class="absolute inset-0 bg-[radial-gradient(#5d3f37_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
+        <div class="absolute top-0 left-0 right-0 h-1 bg-[#E5A93B]"></div>
+        <div class="absolute bottom-0 left-0 right-0 h-[3px] bg-[#E5A93B]"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 py-5 flex flex-col lg:flex-row items-center justify-between relative z-10 gap-6">
+            
+            <!-- Traditional wooden shop board styling -->
+            <div class="flex items-center space-x-4">
+                <div class="h-16 w-16 rounded-2xl bg-[#C65D2E] border-2 border-[#E5A93B] flex items-center justify-center shadow-lg shadow-black/30 shrink-0">
+                    <i data-lucide="sparkles" class="text-[#F5E6CA] font-bold text-3xl animate-pulse"></i>
+                </div>
+                <div>
+                    <!-- Shop Name in traditional Marcellus serif -->
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-wider text-[#F5E6CA] uppercase font-serif" style="text-shadow: 2px 2px 0px rgba(0,0,0,0.5);">
+                        प्रमोद जनरल स्टोर
+                    </h1>
+                    <h2 class="text-xl md:text-2xl font-extrabold tracking-widest text-[#E5A93B] uppercase font-serif" style="text-shadow: 1.5px 1.5px 0px rgba(0,0,0,0.5);">
+                        {{ settings.store_name if settings else 'Pramod General Store' }}
+                    </h2>
+                    <span class="block text-[10px] text-[#F5E6CA]/80 font-semibold tracking-widest uppercase mt-0.5 font-sans">
+                        &ldquo;{{ settings.tagline if settings else 'Trusted Since Generations' }}&rdquo;
+                    </span>
+                </div>
+            </div>
+
+            <!-- User Auth & Session Panel -->
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                {% if current_user %}
+                <div class="text-center sm:text-right text-[#F5E6CA] text-xs font-semibold">
+                    <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Logged In As</span>
+                    <span class="font-bold text-[#E5A93B]">{{ current_user.name }}</span>
+                    <span class="px-2 py-0.5 ml-1.5 rounded-full text-[9px] font-bold bg-[#C65D2E] text-[#F5E6CA]">{{ current_user.role }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Portal Switching Controls -->
+                <div class="flex items-center space-x-2 bg-black/35 p-1 rounded-2xl border border-[#E5A93B]/20">
+                    <a href="/" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center space-x-1.5
+                                {% if request.path == '/' %}
+                                  bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] border border-[#E5A93B]/30 shadow-md
+                                {% else %}
+                                  text-[#F5E6CA]/70 hover:text-white
+                                {% endif %}">
+                        <i data-lucide="store" class="w-3.5 h-3.5"></i>
+                        <span>Kirana Bazar</span>
+                    </a>
+                    
+                    {% if current_user %}
+                        {% if current_user.role in ["Owner", "Clerk"] %}
+                        <a href="/admin" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center space-x-1.5
+                                    {% if request.path == '/admin' %}
+                                      bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] border border-[#E5A93B]/30 shadow-md
+                                    {% else %}
+                                      text-[#F5E6CA]/70 hover:text-white
+                                    {% endif %}">
+                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <span>Shop Ledger</span>
+                        </a>
+                        {% elif current_user.role == "Delivery Boy" %}
+                        <a href="/delivery_dashboard" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center space-x-1.5
+                                    {% if request.path == '/delivery_dashboard' %}
+                                      bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] border border-[#E5A93B]/30 shadow-md
+                                    {% else %}
+                                      text-[#F5E6CA]/70 hover:text-white
+                                    {% endif %}">
+                            <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                            <span>My Deliveries</span>
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Logout Option -->
+                        <a href="/logout" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-rose-300 hover:text-rose-100 hover:bg-rose-950/20 transition-all duration-200 flex items-center space-x-1">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                            <span>Exit</span>
+                        </a>
+                    {% else %}
+                        <a href="/login" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#E5A93B] hover:text-[#F5E6CA] hover:bg-[#C65D2E]/20 transition-all duration-200 flex items-center space-x-1">
+                            <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                            <span>Sign In</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-8 relative">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Traditional Village Shop Footer -->
+    <footer class="w-full shrink-0 bg-[#4E342E] text-[#F5E6CA]/80 py-8 border-t border-[#E5A93B]/20 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(#5d3f37_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
+        <div class="max-w-7xl mx-auto px-6 text-center space-y-4 relative z-10">
+            <h3 class="text-lg font-serif font-bold text-[#E5A93B] tracking-wider uppercase">{{ settings.store_name if settings else 'PRAMOD GENERAL STORE' }}</h3>
+            <p class="text-xs max-w-md mx-auto leading-relaxed text-[#F5E6CA]/60">
+                &ldquo;Bringing the warmth of the traditional village market into the digital age. Offering fresh groceries, staples, and household essentials with trusted local service.&rdquo;
+            </p>
+            <div class="border-t border-[#F5E6CA]/10 w-24 mx-auto my-3"></div>
+            <p class="text-[10px] tracking-wider uppercase font-semibold text-[#F5E6CA]/40">
+                &copy; 2026 Pramod General Store &middot; Village Heritage Digital Marketplace
+            </p>
+        </div>
+    </footer>
+
+    <!-- Core Javascript -->
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script>
+        // Init icons
+        lucide.createIcons();
+        
+        // Auto-remove flash message after 5 seconds
+        const flashEl = document.getElementById('flash-message');
+        if (flashEl) {
+            setTimeout(() => {
+                flashEl.style.opacity = '0';
+                setTimeout(() => flashEl.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

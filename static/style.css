@@ -1,0 +1,73 @@
+/* Pramod General Store - Village Heritage Premium Design Tokens */
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #FAF4E8; /* Wheat Cream soft plaster wall color */
+    background-image: 
+        radial-gradient(rgba(198, 93, 46, 0.03) 1px, transparent 0), 
+        radial-gradient(rgba(78, 52, 46, 0.02) 1.5px, transparent 0);
+    background-size: 24px 24px, 48px 48px;
+    background-position: 0 0, 12px 12px;
+}
+
+/* Headers & Traditional serif indicators */
+h1, h2, h3, h4, h5, h6, .font-serif {
+    font-family: 'Marcellus', serif !important;
+}
+
+/* Wooden frame look for cards and signage */
+.wood-frame {
+    border: 3px solid #4E342E;
+    outline: 2px solid #E5A93B;
+    background-color: #FAF4E8;
+    box-shadow: inset 0 0 15px rgba(78, 52, 46, 0.08);
+}
+
+/* Traditional clay / terracotta button glow */
+.btn-terracotta {
+    background: linear-gradient(135deg, #C65D2E 0%, #A04000 100%);
+    color: #FAF4E8;
+    box-shadow: 0 4px 6px -1px rgba(198, 93, 46, 0.15), 0 2px 4px -1px rgba(198, 93, 46, 0.1);
+}
+.btn-terracotta:hover {
+    box-shadow: 0 0 15px rgba(198, 93, 46, 0.35);
+}
+
+/* Clay Red elements */
+.clay-red-glow {
+    box-shadow: 0 0 20px rgba(141, 35, 15, 0.15);
+}
+
+/* Custom Kirana Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #FAF4E8;
+}
+::-webkit-scrollbar-thumb {
+    background: #4E342E;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #C65D2E;
+}
+
+/* Category menu item active state */
+.cat-item-active {
+    background-color: rgba(198, 93, 46, 0.1) !important;
+    color: #C65D2E !important;
+    border: 1px solid rgba(198, 93, 46, 0.25) !important;
+}
+
+/* Modal backgrounds */
+#qr-modal, #add-product-modal, #edit-product-modal, #khata-modal, #razorpay-modal {
+    background-color: rgba(78, 52, 46, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+/* Wood board header border pattern styling */
+.border-motif {
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #E5A93B 10px, #E5A93B 11px);
+}
