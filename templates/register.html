@@ -1,58 +1,549 @@
 {% extends 'base.html' %}
 
-{% block title %}Register - Pramod General Store{% endblock %}
+{% block title %}Register - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto my-8 bg-[#F5E6CA]/60 border-2 border-[#4E342E]/20 rounded-2xl p-8 shadow-xl relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C65D2E] to-[#E5A93B]"></div>
+<style>
+    /* Premium Page Keyframes & Utilities */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-6px) scale(1.02); }
+    }
+    @keyframes floatSlow {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-16px) rotate(8deg); }
+    }
+    @keyframes floatSlower {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(18px) rotate(-12deg); }
+    }
+    @keyframes pulseSoft {
+        0%, 100% { opacity: 0.15; }
+        50% { opacity: 0.35; }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .animate-float {
+        animation: float 5s ease-in-out infinite;
+    }
+    .floating-decor-1 {
+        animation: floatSlow 10s ease-in-out infinite;
+    }
+    .floating-decor-2 {
+        animation: floatSlower 14s ease-in-out infinite;
+    }
     
-    <div class="text-center space-y-2 mb-6">
-        <div class="inline-flex h-12 w-12 rounded-full bg-[#2E7D32] border border-[#E5A93B] items-center justify-center text-white text-xl shadow-md">
-            ✍️
+    /* Paper Plaster Texture overlay */
+    .paper-texture {
+        position: absolute;
+        inset: 0;
+        opacity: 0.045;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Focus & Sliding Focus Glow states */
+    .input-group-wrapper {
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .input-group-wrapper:focus-within {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(199, 106, 43, 0.08);
+    }
+
+    /* CTA Button Ripple effects */
+    .btn-ripple {
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-ripple::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 140px;
+        height: 140px;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        transition: transform 0.6s, opacity 1s;
+    }
+    .btn-ripple:active::after {
+        transform: translate(-50%, -50%) scale(4);
+        opacity: 1;
+        transition: 0s;
+    }
+
+    /* Responsive Mobile Sticky Controls */
+    @media (max-width: 640px) {
+        .mobile-sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(250, 244, 232, 0.96);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            border-top: 1.5px solid rgba(217, 164, 65, 0.25);
+            box-shadow: 0 -8px 24px rgba(78, 52, 46, 0.12);
+            z-index: 40;
+        }
+        .form-container {
+            padding-bottom: 100px;
+        }
+    }
+</style>
+
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    
+    <!-- Floating Village Heritage Backdrop Decorative items -->
+    <div class="absolute top-10 left-[10%] text-5xl opacity-15 select-none pointer-events-none floating-decor-1">🌾</div>
+    <div class="absolute top-24 right-[12%] text-4xl opacity-15 select-none pointer-events-none floating-decor-2">🌶️</div>
+    <div class="absolute bottom-20 left-[8%] text-4xl opacity-15 select-none pointer-events-none floating-decor-2">🪔</div>
+    <div class="absolute bottom-16 right-[10%] text-5xl opacity-15 select-none pointer-events-none floating-decor-1">🍃</div>
+    <div class="absolute top-1/2 left-[5%] text-3xl opacity-10 select-none pointer-events-none floating-decor-2">🌰</div>
+    <div class="absolute top-1/3 right-[6%] text-4xl opacity-10 select-none pointer-events-none floating-decor-1">🌾</div>
+
+    <!-- Centered Premium Registration Card -->
+    <div class="w-full max-w-[520px] bg-white border border-[#D9A441]/35 rounded-[24px] shadow-[0_24px_50px_rgba(78,52,46,0.12)] p-8 md:p-10 relative overflow-hidden animate-fade-in z-10 form-container">
+        
+        <!-- Paper Texture overlay for the heritage feeling -->
+        <div class="paper-texture"></div>
+        
+        <!-- Top Colored Border Accent -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C96A2B] to-[#D9A441]"></div>
+
+        <!-- Header Section with Circular Logo -->
+        <div class="text-center space-y-4 mb-8">
+            <div class="flex justify-center">
+                <div class="relative">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#C96A2B] to-[#D9A441] flex items-center justify-center border-2 border-[#FAF4E8] shadow-lg shadow-orange-950/20 animate-float">
+                        <i data-lucide="sparkles" class="w-10 h-10 text-[#FAF4E8] animate-pulse"></i>
+                    </div>
+                    <!-- Halo border ring -->
+                    <div class="absolute -inset-1.5 rounded-full border border-[#D9A441]/30 animate-spin [animation-duration:16s] pointer-events-none"></div>
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <h3 class="text-2xl md:text-3xl font-serif font-bold text-[#4A2F2A] tracking-wide">Create Your Account</h3>
+                <p class="text-xs text-[#4A2F2A]/70 max-w-sm mx-auto leading-relaxed">
+                    Join the trusted digital family of Pramod General Store and enjoy seamless grocery shopping.
+                </p>
+            </div>
         </div>
-        <h3 class="text-xl font-serif font-bold text-[#4E342E] uppercase">Create New Account</h3>
-        <p class="text-xs text-slate-500 font-semibold">Join the digital community of Pramod General Store.</p>
-    </div>
 
-    <form action="/register" method="POST" class="space-y-4 text-xs font-semibold">
-        <div>
-            <label for="username" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Username</label>
-            <input type="text" id="username" name="username" required placeholder="Choose a username" class="w-full px-3.5 py-2.5 bg-white border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700 text-xs">
+        <!-- Registration Form -->
+        <form action="/register" method="POST" class="space-y-5 text-xs font-semibold" novalidate>
+            
+            <!-- Full Name input -->
+            <div class="space-y-1.5 relative">
+                <label for="name" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Full Name</label>
+                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                    <i data-lucide="user" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                    <input type="text" id="name" name="name" required placeholder="Pramod Kumar" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                </div>
+                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+            </div>
+
+            <!-- Mobile Number input -->
+            <div class="space-y-1.5 relative">
+                <label for="mobile" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Mobile Number</label>
+                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                    <i data-lucide="phone" class="w-4 h-4 text-[#4A2F2A]/40 mr-2 shrink-0"></i>
+                    <span class="text-sm font-bold text-[#4A2F2A]/60 mr-2 border-r border-[#4A2F2A]/15 pr-2 select-none">+91</span>
+                    <input type="tel" id="mobile" name="mobile" required placeholder="9876501101" inputmode="numeric" pattern="[0-9]{10}" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                </div>
+                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+                
+                <!-- Mock OTP Send Trigger Link -->
+                <div id="otp-trigger-container" class="hidden mt-2">
+                    <button type="button" id="send-otp-btn" class="text-[10px] font-bold text-[#C96A2B] hover:text-[#B3581E] flex items-center space-x-1 transition-all">
+                        <span>Verify via Mobile OTP?</span>
+                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </button>
+                </div>
+
+                <!-- OTP Input collapsing drawer -->
+                <div id="otp-drawer" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-0 space-y-2 mt-2 bg-[#FAF4E8]/40 p-3 rounded-xl border border-[#D9A441]/25">
+                    <p class="text-[10px] text-[#4A2F2A]/70 font-medium">
+                        Simulating verification code dispatch. Use code <strong class="text-[#C96A2B]">1234</strong> to verify:
+                    </p>
+                    <div class="flex items-center space-x-2">
+                        <div class="relative flex-grow">
+                            <input type="text" id="otp-code" maxlength="4" placeholder="4-Digit Code" class="w-full px-3 py-2 bg-white border border-[#4A2F2A]/15 rounded-lg text-xs tracking-widest text-center font-bold focus:outline-none focus:border-[#C96A2B] text-[#4A2F2A]">
+                        </div>
+                        <button type="button" id="verify-otp-btn" class="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-lg transition-all shadow-md">
+                            Verify
+                        </button>
+                    </div>
+                    <div id="otp-feedback" class="text-[10px] font-bold text-center"></div>
+                </div>
+            </div>
+
+            <!-- Username input -->
+            <div class="space-y-1.5 relative">
+                <label for="username" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Username</label>
+                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                    <i data-lucide="at-sign" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                    <input type="text" id="username" name="username" required placeholder="ramesh_ji" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                </div>
+                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+            </div>
+
+            <!-- Password input -->
+            <div class="space-y-1.5 relative">
+                <label for="password" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Password</label>
+                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                    <i data-lucide="lock" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                    <input type="password" id="password" name="password" required placeholder="Choose a strong password" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                    <button type="button" onclick="togglePasswordVisibility('password', 'password-toggle-icon')" class="text-[#4A2F2A]/40 hover:text-[#4A2F2A]/70 focus:outline-none ml-2 shrink-0">
+                        <i data-lucide="eye" id="password-toggle-icon" class="w-4 h-4"></i>
+                    </button>
+                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                </div>
+                
+                <!-- Live Password Strength Meter -->
+                <div class="mt-2 space-y-1">
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="font-bold text-[#4A2F2A]/60">Password Strength</span>
+                        <span id="strength-label" class="font-extrabold text-[#4A2F2A]/40">None</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1.5 h-1">
+                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                    </div>
+                </div>
+                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+            </div>
+
+            <!-- Confirm Password input -->
+            <div class="space-y-1.5 relative">
+                <label for="confirm_password" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Confirm Password</label>
+                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Verify your password" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                    <button type="button" onclick="togglePasswordVisibility('confirm_password', 'confirm-password-toggle-icon')" class="text-[#4A2F2A]/40 hover:text-[#4A2F2A]/70 focus:outline-none ml-2 shrink-0">
+                        <i data-lucide="eye" id="confirm-password-toggle-icon" class="w-4 h-4"></i>
+                    </button>
+                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                </div>
+                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+            </div>
+
+            <!-- CTA Submit Button Wrapper -->
+            <div class="mobile-sticky-footer pt-3">
+                <button type="submit" class="w-full py-4 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs btn-ripple flex items-center justify-center space-x-2">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Create Account</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Login Redirect Option -->
+        <div class="border-t border-[#4A2F2A]/10 mt-8 pt-5 text-center text-xs">
+            <span class="text-[#4A2F2A]/60 font-medium">Already have an account? </span>
+            <a href="/login" class="text-[#C96A2B] font-extrabold hover:underline inline-flex items-center space-x-1">
+                <span>Log In</span>
+                <i data-lucide="arrow-right-left" class="w-3.5 h-3.5 ml-0.5"></i>
+            </a>
         </div>
 
-        <div>
-            <label for="password" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Password</label>
-            <input type="password" id="password" name="password" required placeholder="Choose a password" class="w-full px-3.5 py-2.5 bg-white border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700 text-xs">
+        <!-- Heritage Branding Footer -->
+        <div class="flex items-center justify-center space-x-1.5 mt-8 text-[10px] font-extrabold tracking-widest uppercase text-[#4A2F2A]/40 pointer-events-none select-none">
+            <i data-lucide="leaf" class="w-3.5 h-3.5 text-[#2E7D32]"></i>
+            <span>Trusted Since Generations</span>
         </div>
-
-        <div>
-            <label for="name" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Full Name</label>
-            <input type="text" id="name" name="name" required placeholder="Enter your full name" class="w-full px-3.5 py-2.5 bg-white border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700 text-xs">
-        </div>
-
-        <div>
-            <label for="mobile" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Mobile Number</label>
-            <input type="tel" id="mobile" name="mobile" required placeholder="e.g. 9876501101" class="w-full px-3.5 py-2.5 bg-white border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700 text-xs">
-        </div>
-
-        <div>
-            <label for="role" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1">Account Type (Role)</label>
-            <select id="role" name="role" class="w-full px-3.5 py-2.5 bg-white border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700 text-xs">
-                <option value="Customer">Customer (Personal Bazar and Ledger)</option>
-                <option value="Clerk">Clerk (Store helper and entry manager)</option>
-                <option value="Delivery Boy">Delivery Boy (Shipping agent)</option>
-                <option value="Owner">Owner (Full administrative rights)</option>
-            </select>
-        </div>
-
-        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-[#F5E6CA] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-green-950/20 uppercase tracking-wider text-xs">
-            Submit Registration
-        </button>
-    </form>
-
-    <div class="border-t border-[#4E342E]/10 mt-6 pt-4 text-center text-xs">
-        <span class="text-slate-500">Already registered? </span>
-        <a href="/login" class="text-[#C65D2E] font-bold hover:underline">Log In Here</a>
     </div>
 </div>
+
+<!-- Fullscreen success processing overlay -->
+<div id="success-overlay" class="fixed inset-0 bg-[#4A2F2A]/90 backdrop-blur-md z-50 flex flex-col items-center justify-center text-center hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white border border-[#D9A441]/40 rounded-3xl p-8 max-w-sm mx-4 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300" id="success-card">
+        <div class="paper-texture"></div>
+        <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#C96A2B] to-[#D9A441]"></div>
+        
+        <div class="w-20 h-20 bg-[#2E7D32]/10 border border-[#2E7D32]/25 rounded-full flex items-center justify-center mx-auto mb-4 text-[#2E7D32] animate-bounce">
+            <i data-lucide="check-circle" class="w-12 h-12"></i>
+        </div>
+        
+        <h3 class="text-2xl font-serif font-bold text-[#4A2F2A] mb-2">Account Created!</h3>
+        <p class="text-sm text-[#4A2F2A]/80 mb-6 leading-relaxed">
+            Welcome to the digital family of Pramod General Store. Preparing your personal ledger and shopping bahi...
+        </p>
+        
+        <div class="w-full bg-[#FAF4E8] h-1.5 rounded-full overflow-hidden">
+            <div class="bg-[#C96A2B] h-full rounded-full transition-all duration-[1.5s] ease-out w-0" id="success-progress"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Visibility toggle for password inputs
+    function togglePasswordVisibility(fieldId, iconId) {
+        const input = document.getElementById(fieldId);
+        const icon = document.getElementById(iconId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Element references
+        const form = document.querySelector('form');
+        const nameInput = document.getElementById('name');
+        const mobileInput = document.getElementById('mobile');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        
+        // OTP references
+        const otpTriggerContainer = document.getElementById('otp-trigger-container');
+        const sendOtpBtn = document.getElementById('send-otp-btn');
+        const otpDrawer = document.getElementById('otp-drawer');
+        const verifyOtpBtn = document.getElementById('verify-otp-btn');
+        const otpCodeInput = document.getElementById('otp-code');
+        const otpFeedback = document.getElementById('otp-feedback');
+        
+        // Success Overlay references
+        const successOverlay = document.getElementById('success-overlay');
+        const successCard = document.getElementById('success-card');
+        const successProgress = document.getElementById('success-progress');
+        
+        let isMobileVerified = false;
+
+        // Reusable state rendering helper
+        function setInputState(inputEl, isValid, errorText = "") {
+            const parent = inputEl.closest('.input-group-wrapper');
+            const badge = parent.querySelector('.validation-badge');
+            const msgEl = parent.parentElement.querySelector('.validation-msg');
+            
+            if (inputEl.value.trim() === "") {
+                parent.classList.remove('border-emerald-500', 'border-rose-500');
+                parent.classList.add('border-[#4A2F2A]/15');
+                badge.classList.add('opacity-0');
+                if (msgEl) msgEl.classList.add('hidden');
+                return;
+            }
+            
+            if (isValid) {
+                parent.classList.remove('border-[#4A2F2A]/15', 'border-rose-500');
+                parent.classList.add('border-emerald-500');
+                badge.classList.remove('opacity-0');
+                // Avoid overwriting sandbox verified badge
+                if (!isMobileVerified || inputEl !== mobileInput) {
+                    badge.innerHTML = '<i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32]"></i>';
+                    badge.className = "validation-badge ml-2 opacity-100 transition-opacity duration-200 shrink-0";
+                }
+                if (msgEl) msgEl.classList.add('hidden');
+            } else {
+                parent.classList.remove('border-[#4A2F2A]/15', 'border-emerald-500');
+                parent.classList.add('border-rose-500');
+                badge.classList.remove('opacity-0');
+                badge.innerHTML = '<i data-lucide="alert-circle" class="w-4.5 h-4.5 text-rose-500"></i>';
+                badge.className = "validation-badge ml-2 opacity-100 transition-opacity duration-200 shrink-0";
+                if (msgEl && errorText) {
+                    msgEl.textContent = errorText;
+                    msgEl.classList.remove('hidden');
+                }
+            }
+            lucide.createIcons();
+        }
+
+        // Live validation logic for Name
+        function validateName() {
+            const val = nameInput.value.trim();
+            const isValid = val.length >= 3;
+            setInputState(nameInput, isValid, "Full name must be at least 3 letters.");
+            return isValid;
+        }
+        nameInput.addEventListener('input', validateName);
+
+        // Live validation logic for Mobile
+        function validateMobile() {
+            const val = mobileInput.value.replace(/\D/g, '');
+            // Limit characters strictly to numeric 10-digits
+            mobileInput.value = val.substring(0, 10);
+            
+            const isValid = mobileInput.value.length === 10;
+            setInputState(mobileInput, isValid, "Please enter a valid 10-digit mobile number.");
+            
+            if (isValid && !isMobileVerified) {
+                otpTriggerContainer.classList.remove('hidden');
+            } else {
+                otpTriggerContainer.classList.add('hidden');
+            }
+            return isValid;
+        }
+        mobileInput.addEventListener('input', validateMobile);
+
+        // Simulated OTP Verification Trigger
+        sendOtpBtn.addEventListener('click', () => {
+            otpDrawer.style.maxHeight = '200px';
+            otpDrawer.classList.remove('opacity-0');
+            otpFeedback.textContent = "OTP code sent successfully.";
+            otpFeedback.className = "text-[10px] font-bold text-center text-[#C96A2B]";
+            otpCodeInput.focus();
+        });
+
+        // OTP verification click handler
+        verifyOtpBtn.addEventListener('click', () => {
+            if (otpCodeInput.value === '1234') {
+                isMobileVerified = true;
+                otpFeedback.textContent = "✓ OTP Code Verified Successfully!";
+                otpFeedback.className = "text-[10px] font-bold text-center text-[#2E7D32] animate-bounce";
+                
+                setTimeout(() => {
+                    otpDrawer.style.maxHeight = '0px';
+                    otpDrawer.classList.add('opacity-0');
+                    otpTriggerContainer.classList.add('hidden');
+                    
+                    // Style the mobile field as explicitly verified
+                    const parent = mobileInput.closest('.input-group-wrapper');
+                    const badge = parent.querySelector('.validation-badge');
+                    badge.innerHTML = '<i data-lucide="shield-check" class="w-4 h-4 text-[#2E7D32]"></i> <span class="text-[9px] font-extrabold text-[#2E7D32] uppercase tracking-wider mr-1">Verified</span>';
+                    badge.className = "validation-badge ml-2 flex items-center bg-[#2E7D32]/10 border border-[#2E7D32]/25 px-2 py-0.5 rounded-full select-none shrink-0";
+                    mobileInput.setAttribute('disabled', 'true');
+                    lucide.createIcons();
+                }, 1200);
+            } else {
+                otpFeedback.textContent = "✗ Incorrect OTP! Use sandbox code 1234.";
+                otpFeedback.className = "text-[10px] font-bold text-center text-rose-500 animate-pulse";
+            }
+        });
+
+        // Live validation logic for Username
+        function validateUsername() {
+            const val = usernameInput.value.trim();
+            const isValid = val.length >= 3 && /^[a-zA-Z0-9_]+$/.test(val);
+            setInputState(usernameInput, isValid, "Username must be at least 3 alphanumeric characters.");
+            return isValid;
+        }
+        usernameInput.addEventListener('input', validateUsername);
+
+        // Live validation logic for Password
+        function validatePassword() {
+            const val = passwordInput.value;
+            const isValid = val.length >= 6;
+            setInputState(passwordInput, isValid, "Password must be at least 6 characters.");
+            
+            // Password Strength Indicator Logic
+            const strengthBarSegs = document.querySelectorAll('.strength-bar-seg');
+            const strengthLabel = document.getElementById('strength-label');
+            
+            let score = 0;
+            if (val.length >= 6) score += 1;
+            if (val.length >= 8) score += 1;
+            if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score += 1;
+            if (/[0-9]/.test(val) && /[^A-Za-z0-9]/.test(val)) score += 1;
+            
+            strengthBarSegs.forEach(seg => {
+                seg.className = 'strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300';
+            });
+            
+            if (val.length === 0) {
+                strengthLabel.textContent = 'None';
+                strengthLabel.className = 'font-extrabold text-[#4A2F2A]/40';
+                return isValid;
+            }
+            
+            if (score === 1) {
+                strengthLabel.textContent = 'Weak';
+                strengthLabel.className = 'font-extrabold text-rose-500';
+                strengthBarSegs[0].className = 'strength-bar-seg bg-rose-500 rounded-full transition-colors duration-300';
+            } else if (score === 2) {
+                strengthLabel.textContent = 'Fair';
+                strengthLabel.className = 'font-extrabold text-amber-500';
+                strengthBarSegs[0].className = 'strength-bar-seg bg-amber-500 rounded-full transition-colors duration-300';
+                strengthBarSegs[1].className = 'strength-bar-seg bg-amber-500 rounded-full transition-colors duration-300';
+            } else if (score === 3) {
+                strengthLabel.textContent = 'Good';
+                strengthLabel.className = 'font-extrabold text-blue-500';
+                strengthBarSegs[0].className = 'strength-bar-seg bg-blue-500 rounded-full transition-colors duration-300';
+                strengthBarSegs[1].className = 'strength-bar-seg bg-blue-500 rounded-full transition-colors duration-300';
+                strengthBarSegs[2].className = 'strength-bar-seg bg-blue-500 rounded-full transition-colors duration-300';
+            } else if (score === 4) {
+                strengthLabel.textContent = 'Strong';
+                strengthLabel.className = 'font-extrabold text-emerald-500';
+                strengthBarSegs[0].className = 'strength-bar-seg bg-emerald-500 rounded-full transition-colors duration-300';
+                strengthBarSegs[1].className = 'strength-bar-seg bg-emerald-500 rounded-full transition-colors duration-300';
+                strengthBarSegs[2].className = 'strength-bar-seg bg-emerald-500 rounded-full transition-colors duration-300';
+                strengthBarSegs[3].className = 'strength-bar-seg bg-emerald-500 rounded-full transition-colors duration-300';
+            }
+            
+            // Re-validate confirm password if it contains values
+            if (confirmPasswordInput.value.length > 0) {
+                validateConfirmPassword();
+            }
+            return isValid;
+        }
+        passwordInput.addEventListener('input', validatePassword);
+
+        // Live validation logic for Confirm Password
+        function validateConfirmPassword() {
+            const isValid = confirmPasswordInput.value === passwordInput.value && confirmPasswordInput.value.length > 0;
+            setInputState(confirmPasswordInput, isValid, "Passwords do not match.");
+            return isValid;
+        }
+        confirmPasswordInput.addEventListener('input', validateConfirmPassword);
+
+        // Submit listener with premium success screen workflow
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const isNameVal = validateName();
+            const isMobileVal = validateMobile();
+            const isUserVal = validateUsername();
+            const isPassVal = validatePassword();
+            const isConfirmVal = validateConfirmPassword();
+            
+            if (!isNameVal || !isMobileVal || !isUserVal || !isPassVal || !isConfirmVal) {
+                // Focus on the first field with errors
+                if (!isNameVal) nameInput.focus();
+                else if (!isMobileVal) mobileInput.focus();
+                else if (!isUserVal) usernameInput.focus();
+                else if (!isPassVal) passwordInput.focus();
+                else if (!isConfirmVal) confirmPasswordInput.focus();
+                return;
+            }
+            
+            // Re-enable mobile input in case it was disabled during OTP verification so Flask form parses it
+            mobileInput.removeAttribute('disabled');
+            
+            // Show Success Overlay Modal
+            successOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                successOverlay.classList.remove('opacity-0');
+                successCard.classList.remove('scale-95');
+            }, 50);
+            
+            // Fill progress bar animation
+            setTimeout(() => {
+                successProgress.style.width = '100%';
+            }, 100);
+            
+            // Submit form to backend after transition completes
+            setTimeout(() => {
+                form.submit();
+            }, 1600);
+        });
+    });
+</script>
 {% endblock %}

@@ -741,8 +741,50 @@ def admin():
         pl=pl_data,
         whatsapp_logs=whatsapp_logs_db,
         audit_logs=audit_logs_db,
-        sales_json=sales_json
+        sales_json=sales_json,
+        users=users_db
     )
+
+@app.route('/admin/update_user_role', methods=['POST'])
+def update_user_role():
+    """Allows Owner to change roles of registered users."""
+    user = get_current_user()
+    if not user or user['role'] != "Owner":
+        flash("Permission Denied! Only the Store Owner can assign user roles.", "error")
+        return redirect(url_for('admin', tab='users'))
+        
+    username = request.form.get('username')
+    new_role = request.form.get('role')
+    
+    if username == user['username']:
+        flash("You cannot change your own role!", "error")
+        return redirect(url_for('admin', tab='users'))
+        
+    target_user = next((u for u in users_db if u['username'] == username), None)
+    if not target_user:
+        flash("User not found!", "error")
+        return redirect(url_for('admin', tab='users'))
+        
+    old_role = target_user['role']
+    target_user['role'] = new_role
+    
+    # If the user is promoted to Delivery Boy and isn't in delivery_boys_db, add them
+    if new_role == "Delivery Boy":
+        exists = any(d['mobile'] == target_user['mobile'] for d in delivery_boys_db)
+        if not exists:
+            new_id = max(d['id'] for d in delivery_boys_db) + 1 if delivery_boys_db else 1
+            delivery_boys_db.append({
+                "id": new_id,
+                "name": target_user['name'],
+                "mobile": target_user['mobile'],
+                "status": "Active"
+            })
+            
+    # Write audit log
+    log_audit("User Role Updated", f"Changed role of user '{username}' from {old_role} to {new_role}.")
+    flash(f"Role for user '{target_user['name']}' updated to {new_role} successfully!", "success")
+    return redirect(url_for('admin', tab='users'))
+
 
 @app.route('/delivery_dashboard')
 def delivery_dashboard():
