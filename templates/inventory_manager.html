@@ -1,0 +1,549 @@
+{% extends 'base.html' %}
+
+{% block title %}RetailIQ - Enterprise Inventory Console{% endblock %}
+
+{% block content %}
+<style>
+    /* RetailIQ Design Tokens */
+    :root {
+        --color-primary: #2563EB; /* Royal Blue */
+        --color-success: #16A34A; /* Emerald Green */
+        --color-warning: #F97316; /* Orange */
+        --color-bg: #FAF9F6;      /* Warm off-white */
+    }
+
+    /* Page load animation */
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-up {
+        animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Tab active style state */
+    .tab-btn-active {
+        background-color: rgba(37, 99, 235, 0.08) !important;
+        color: #2563EB !important;
+        border-left-width: 4px;
+        border-color: #2563EB;
+    }
+</style>
+
+<!-- Alert Toast Notification -->
+<div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-[#FAF9F6] border border-[#2563EB]/25 text-[#2563EB] p-4 rounded-xl shadow-lg font-bold text-xs flex items-center justify-between space-x-4 max-w-md w-full transition-all duration-300 translate-y-[-100px] opacity-0">
+    <span id="toast-msg">Stock Adjusted!</span>
+    <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-600 shrink-0">
+        <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+</div>
+
+<!-- Standalone Split Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-slide-up bg-[#FAF9F6]/50 p-1 rounded-3xl">
+    
+    <!-- LEFT SIDEBAR: RetailIQ Brand & Tab Navigation (25%) -->
+    <div class="col-span-1 md:col-span-3 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+        <!-- Brand Title Header -->
+        <div class="flex items-center space-x-2.5 pb-6 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#16A34A] flex items-center justify-center text-white shadow-md">
+                <i data-lucide="cpu" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h2 class="text-base font-extrabold text-slate-800 tracking-tight leading-tight">RetailIQ</h2>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Enterprise Stock</span>
+            </div>
+        </div>
+
+        <!-- Sidebar Tab Navigation Links -->
+        <nav class="space-y-1.5 pt-6 text-xs font-bold text-slate-500">
+            <button onclick="switchManagerTab('overview')" id="btn-tab-overview" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50 tab-btn-active">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Inventory Overview</span>
+            </button>
+            <button onclick="switchManagerTab('warehouses')" id="btn-tab-warehouses" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50">
+                <i data-lucide="warehouse" class="w-4 h-4"></i>
+                <span>Warehouse Utilization</span>
+            </button>
+            <button onclick="switchManagerTab('expiry')" id="btn-tab-expiry" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50">
+                <i data-lucide="clock-alert" class="w-4 h-4"></i>
+                <span>Expiry Management</span>
+            </button>
+            <button onclick="switchManagerTab('suppliers')" id="btn-tab-suppliers" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50">
+                <i data-lucide="handshake" class="w-4 h-4"></i>
+                <span>Supplier Registry</span>
+            </button>
+            <button onclick="switchManagerTab('reports')" id="btn-tab-reports" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50">
+                <i data-lucide="file-chart-column" class="w-4 h-4"></i>
+                <span>Stock Reports</span>
+            </button>
+            <hr class="border-slate-100 my-2">
+            <a href="/admin" class="w-full px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50 text-slate-700">
+                <i data-lucide="arrow-left-circle" class="w-4 h-4"></i>
+                <span>Back to Admin Console</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- RIGHT CONTENT WINDOW: Selected view panel (75%) -->
+    <div class="col-span-1 md:col-span-9 space-y-6">
+        
+        <!-- TOP CONTROL HEADBAR: Welcome & Action Tools -->
+        <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden">
+            <div>
+                <span class="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider block">RetailIQ Business Intelligence</span>
+                <h2 class="text-xl font-extrabold text-slate-800 mt-0.5">Enterprise stock console</h2>
+            </div>
+            
+            <div class="flex items-center gap-2.5">
+                <!-- Quick actions -->
+                <button type="button" onclick="mockAction('Purchase order created.')" class="px-4 py-2.5 bg-gradient-to-r from-[#2563EB] to-[#1E40AF] text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center space-x-1">
+                    <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+                    <span>Generate PO</span>
+                </button>
+                <button type="button" onclick="mockAction('Inventory CSV exported.')" class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold rounded-xl transition-all">
+                    Export Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB SECTION 1: INVENTORY OVERVIEW -->
+        <section id="pane-tab-overview" class="space-y-6 tab-pane">
+            
+            <!-- Top KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-semibold text-slate-500">
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-transform">
+                    <div class="p-2.5 bg-blue-50 rounded-xl"><i data-lucide="banknote" class="w-5 h-5 text-[#2563EB]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-slate-800 block">₹{{ total_val }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Stock Valuation</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-transform">
+                    <div class="p-2.5 bg-emerald-50 rounded-xl"><i data-lucide="shopping-basket" class="w-5 h-5 text-[#16A34A]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#16A34A] block">{{ products_in_stock }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Items In Stock</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-transform">
+                    <div class="p-2.5 bg-orange-50 rounded-xl"><i data-lucide="alert-triangle" class="w-5 h-5 text-[#F97316]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#F97316] block">{{ low_stock_items }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Low Stock Warnings</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-transform">
+                    <div class="p-2.5 bg-rose-50 rounded-xl"><i data-lucide="package-x" class="w-5 h-5 text-rose-600"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-rose-600 block">{{ out_of_stock_items }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Out of Stock</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search, Filters, and Table catalog -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                
+                <!-- Filters toolbar -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Search Catalog</label>
+                        <div class="relative flex items-center bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
+                            <input type="text" id="iq-search-inp" oninput="filterIQTable()" placeholder="Name, Category, or Supplier..." class="w-full bg-transparent border-none text-xs text-slate-700 focus:outline-none p-0">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Stock Alert Level</label>
+                        <select id="iq-filter-level" onchange="filterIQTable()" class="w-full px-3 py-2 border border-slate-100 bg-white rounded-xl focus:outline-none focus:border-[#2563EB] text-slate-700">
+                            <option value="All">All Items</option>
+                            <option value="InStock">In Stock</option>
+                            <option value="LowStock">Low Stock (&lt; 10)</option>
+                            <option value="OutOfStock">Out of Stock (0)</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category Category</label>
+                        <select id="iq-filter-cat" onchange="filterIQTable()" class="w-full px-3 py-2 border border-slate-100 bg-white rounded-xl focus:outline-none focus:border-[#2563EB] text-slate-700">
+                            <option value="All">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="overflow-x-auto pt-2">
+                    <table class="w-full border-collapse text-left text-xs font-semibold" id="iq-admin-table">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                                <th class="px-4 py-3">Product Name</th>
+                                <th class="px-4 py-3">Category</th>
+                                <th class="px-4 py-3">Current Stock</th>
+                                <th class="px-4 py-3">Unit Price</th>
+                                <th class="px-4 py-3">Stock Valuation</th>
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            {% set cost = product.cost_price if product.cost_price else (product.price * 0.8)|int %}
+                            {% set val_sum = product.price * product.stock %}
+                            
+                            {% set p_img = product.image if product.image else 'biscuits' %}
+                            {% if p_img == 'maggi' or p_img == 'bhujia' %}{% set p_img = 'biscuits' %}
+                            {% elif p_img == 'chana' %}{% set p_img = 'dal' %}
+                            {% elif p_img == 'frooti' %}{% set p_img = 'mustard_oil' %}
+                            {% elif p_img == 'thumsup' %}{% set p_img = 'coffee' %}
+                            {% elif p_img == 'shampoo' %}{% set p_img = 'handwash' %}
+                            {% elif p_img == 'lizol' %}{% set p_img = 'vim' %}
+                            {% endif %}
+                            <tr class="iq-row hover:bg-slate-50/50 border-b border-slate-100 text-slate-600"
+                                data-id="{{ product.id }}"
+                                data-name="{{ product.name }}"
+                                data-cat="{{ product.category }}"
+                                data-price="{{ product.price }}"
+                                data-cost="{{ cost }}"
+                                data-stock="{{ product.stock }}"
+                                data-supplier="{{ product.supplier if product.supplier else 'Local Market' }}"
+                                data-img-src="{{ url_for('static', filename='images/' + p_img + '.png') }}">
+                                
+                                <td class="px-4 py-3 flex items-center space-x-3">
+                                    <img src="{{ url_for('static', filename='images/' + p_img + '.png') }}" class="w-8 h-8 rounded-lg object-cover border border-slate-100">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800">{{ product.name }}</h4>
+                                        <span class="text-[9px] text-slate-400 block font-mono">ID: #PS-{{ "%03d"|format(product.id) }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-500 uppercase text-[10px]">{{ product.category }}</td>
+                                <td class="px-4 py-3">
+                                    {% if product.stock == 0 %}
+                                    <span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[9px] font-bold">Out of Stock</span>
+                                    {% elif product.stock < 10 %}
+                                    <span class="px-2.5 py-0.5 rounded-full bg-orange-50 text-[#F97316] text-[9px] font-bold">{{ product.stock }} Units (Low)</span>
+                                    {% else %}
+                                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#16A34A] text-[9px] font-bold">{{ product.stock }} Units</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 font-mono">₹{{ product.price }}</td>
+                                <td class="px-4 py-3 font-extrabold text-slate-800">₹{{ val_sum }}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button type="button" onclick="openIQDrawer(this)" class="px-2.5 py-1.5 bg-[#2563EB]/5 hover:bg-[#2563EB]/15 text-[#2563EB] font-bold rounded-lg text-[10px] transition-all">
+                                        Details
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB SECTION 2: WAREHOUSE UTILIZATION -->
+        <section id="pane-tab-warehouses" class="hidden space-y-6 tab-pane">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for w in warehouses %}
+                <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4 hover:scale-[1.02] transition-transform">
+                    <div class="flex justify-between items-start">
+                        <span class="p-2.5 bg-blue-50 text-[#2563EB] rounded-xl"><i data-lucide="warehouse" class="w-5 h-5"></i></span>
+                        <span class="text-[9px] font-bold text-slate-400 font-mono">{{ w.temp }} | Capacity: {{ w.capacity }}</span>
+                    </div>
+                    <div class="space-y-1.5">
+                        <h4 class="font-extrabold text-slate-800 text-sm leading-tight">{{ w.name }}</h4>
+                        <div class="w-full bg-slate-50 border border-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-[#2563EB] h-2 rounded-full transition-all duration-500" style="width: {{ w.utilization }}%;"></div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 font-semibold">{{ w.products }} Unique products cataloged in this sector.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Recent Stock Movements Timeline -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-50 pb-3">Stock Movement Timeline Log</h3>
+                
+                <div class="space-y-6">
+                    {% for m in movements %}
+                    <div class="flex items-start space-x-4">
+                        <div class="p-2 bg-slate-50 rounded-xl {{ m.color }} shrink-0">
+                            <i data-lucide="{{ m.icon }}" class="w-4 h-4"></i>
+                        </div>
+                        <div class="space-y-0.5 flex-grow text-xs font-semibold">
+                            <div class="flex justify-between items-baseline">
+                                <h4 class="text-slate-800 font-bold">{{ m.type }}</h4>
+                                <span class="text-[9px] text-slate-400 font-mono font-normal">{{ m.time }}</span>
+                            </div>
+                            <p class="text-slate-400 font-normal leading-relaxed">{{ m.desc }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB SECTION 3: EXPIRY MANAGEMENT -->
+        <section id="pane-tab-expiry" class="hidden space-y-6 tab-pane">
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-50 pb-3">Perishables & Expiry Scheduler</h3>
+                <p class="text-xs text-slate-400">Inventory items with short shelf-life and active expiry windows categorized by safety bounds.</p>
+                
+                <div class="space-y-3.5 text-xs font-semibold text-slate-600">
+                    <div class="p-4 bg-rose-50/20 border border-rose-100 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="space-y-0.5">
+                            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold text-[9px] uppercase tracking-wider">Critical: Expiry &lt; 7 Days</span>
+                            <h4 class="font-bold text-slate-800 text-xs">Amul Fresh Milk (500ml)</h4>
+                        </div>
+                        <button onclick="mockAction('Discount of 25% applied to fresh milk batch.')" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold">Apply 25% Discount</button>
+                    </div>
+
+                    <div class="p-4 bg-orange-50/20 border border-orange-100 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="space-y-0.5">
+                            <span class="px-2 py-0.5 bg-orange-100 text-[#F97316] rounded font-bold text-[9px] uppercase tracking-wider">Warning: Expiry &lt; 15 Days</span>
+                            <h4 class="font-bold text-slate-800 text-xs">Amul Cow Ghee (1L Pack)</h4>
+                        </div>
+                        <button onclick="mockAction('Return request dispatched to Ganga Cooperative.')" class="px-3.5 py-1.5 bg-[#F97316] hover:bg-orange-600 text-white rounded-lg text-[10px] font-bold">Initiate Supplier Return</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB SECTION 4: SUPPLIER REGISTRY -->
+        <section id="pane-tab-suppliers" class="hidden space-y-6 tab-pane">
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-50 pb-3">Supplier Procurement Directory</h3>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    {% for s in suppliers %}
+                    <div class="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-xs font-semibold flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="space-y-1">
+                            <h4 class="font-bold text-slate-800">{{ s.name }}</h4>
+                            <p class="text-[10px] text-slate-400 font-normal">Line: {{ s.products }} | Phone: {{ s.phone }}</p>
+                        </div>
+                        <div class="flex items-baseline gap-4 sm:text-right">
+                            <div>
+                                <span class="block text-[8px] text-slate-400 uppercase">Outstanding Ledger</span>
+                                <strong class="text-sm font-extrabold text-slate-800">₹{{ s.balance }}</strong>
+                            </div>
+                            <button onclick="mockAction('Supplier contact via WhatsApp desk initialized.')" class="px-3 py-1.5 bg-[#16A34A] hover:bg-[#15803d] text-white text-[10px] font-bold rounded-lg uppercase tracking-wider flex items-center space-x-1.5">
+                                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                                <span>WhatsApp</span>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB SECTION 5: STOCK REPORTS -->
+        <section id="pane-tab-reports" class="hidden space-y-6 tab-pane">
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-50 pb-3">Valuation & Procurement Reports</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-semibold">
+                    <div class="p-4 bg-blue-50/20 border border-blue-100 rounded-xl space-y-2">
+                        <h4 class="font-bold text-[#2563EB]">Generate Stock Valuation Summary</h4>
+                        <p class="text-slate-400 leading-normal font-normal">Compile inventory value metrics, warehouse capacities, and tax summaries to Excel.</p>
+                        <button onclick="downloadIQReport('Excel')" class="px-4 py-2 bg-[#2563EB] hover:bg-blue-750 text-white font-bold rounded-xl transition-all shadow-sm">Download Excel Report</button>
+                    </div>
+
+                    <div class="p-4 bg-emerald-50/20 border border-emerald-100 rounded-xl space-y-2">
+                        <h4 class="font-bold text-[#16A34A]">Generate Supplier Purchase Register</h4>
+                        <p class="text-slate-400 leading-normal font-normal">Download complete supplier transaction records, purchase history, and outstanding accounts in PDF.</p>
+                        <button onclick="downloadIQReport('PDF')" class="px-4 py-2 bg-[#16A34A] hover:bg-emerald-800 text-white font-bold rounded-xl transition-all shadow-sm">Download PDF Document</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- Slide-In Product Details Drawer -->
+<div id="iq-detail-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-slate-200 shadow-2xl z-40 transform translate-x-full transition-transform duration-300 ease-out p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <div>
+                <h4 class="text-base font-extrabold text-slate-800" id="iq-drawer-name">Product Name</h4>
+                <span class="text-[9px] text-slate-400 font-mono" id="iq-drawer-id">ID: #PS-001</span>
+            </div>
+            <button type="button" onclick="closeIQDrawer()" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Image frame -->
+        <div class="flex justify-center bg-slate-50 border border-slate-100 rounded-2xl p-4">
+            <img id="iq-drawer-img" src="" class="object-contain h-32 rounded-lg">
+        </div>
+
+        <!-- Pricing details -->
+        <div class="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                <span class="block text-[8px] text-slate-400 uppercase">Cost Price</span>
+                <span class="text-sm font-extrabold text-slate-800" id="iq-drawer-cost">₹0</span>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                <span class="block text-[8px] text-slate-400 uppercase">Selling Price</span>
+                <span class="text-sm font-extrabold text-slate-800" id="iq-drawer-price">₹0</span>
+            </div>
+        </div>
+
+        <!-- AI insights recommendations -->
+        <div class="p-4 bg-blue-50/20 border border-blue-100 rounded-2xl space-y-2">
+            <h5 class="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider flex items-center gap-1">
+                <i data-lucide="brain-circuit" class="w-3.5 h-3.5"></i>
+                <span>AI Restock Intelligence recommendations</span>
+            </h5>
+            <div class="text-[11px] text-slate-500 font-semibold leading-relaxed space-y-1">
+                <p><strong>Predicted Stockout Date:</strong> <span class="text-rose-600">10 Days</span></p>
+                <p><strong>Estimated Weekly Velocity:</strong> <span class="text-slate-800">18 Units</span></p>
+                <p><strong>Suggested Restock Order:</strong> <span class="text-[#2563EB] font-bold">25 Units</span></p>
+            </div>
+        </div>
+
+        <!-- Supplier & Barcode coordinates -->
+        <div class="space-y-2">
+            <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Procurement Logistics</h5>
+            <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-semibold space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Supplier:</span>
+                    <span class="font-bold text-slate-800" id="iq-drawer-supplier">Local Wholesale Mandi</span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                    <span class="text-slate-400">Mock Barcode:</span>
+                    <span class="font-mono text-[9px] text-slate-400" id="iq-drawer-barcode">8431010023</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="border-t border-slate-100 pt-4 flex gap-3 text-xs font-bold">
+        <button type="button" onclick="closeIQDrawer()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+            Close Panel
+        </button>
+    </div>
+</div>
+
+<script>
+    // Tab switching scripts
+    function switchManagerTab(tabId) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('nav button').forEach(b => {
+            b.className = "w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50";
+        });
+        
+        document.getElementById(`pane-tab-${tabId}`).classList.remove('hidden');
+        document.getElementById(`btn-tab-${tabId}`).className = "w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50 tab-btn-active";
+        
+        lucide.createIcons();
+    }
+
+    // Drawer controllers
+    function openIQDrawer(btn) {
+        const row = btn.closest('tr');
+        const id = row.dataset.id;
+        const name = row.dataset.name;
+        const cost = row.dataset.cost;
+        const price = row.dataset.price;
+        const supplier = row.dataset.supplier;
+        const imgSrc = row.dataset.imgSrc;
+        
+        document.getElementById('iq-drawer-name').textContent = name;
+        document.getElementById('iq-drawer-id').textContent = `ID: #PS-${String(id).padStart(3, '0')}`;
+        document.getElementById('iq-drawer-img').src = imgSrc;
+        document.getElementById('iq-drawer-cost').textContent = `₹${cost}`;
+        document.getElementById('iq-drawer-price').textContent = `₹${price}`;
+        document.getElementById('iq-drawer-supplier').textContent = supplier;
+        document.getElementById('iq-drawer-barcode').textContent = `843101${String(id).padStart(4, '0')}`;
+        
+        const drawer = document.getElementById('iq-detail-drawer');
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+        
+        lucide.createIcons();
+    }
+
+    function closeIQDrawer() {
+        const drawer = document.getElementById('iq-detail-drawer');
+        drawer.classList.remove('translate-x-0');
+        drawer.classList.add('translate-x-full');
+    }
+
+    // Advanced search & filters logic
+    function filterIQTable() {
+        const query = document.getElementById('iq-search-inp').value.toLowerCase().trim();
+        const filterLevel = document.getElementById('iq-filter-level').value;
+        const filterCat = document.getElementById('iq-filter-cat').value;
+        
+        document.querySelectorAll('#iq-admin-table .iq-row').forEach(row => {
+            const name = row.dataset.name.toLowerCase();
+            const cat = row.dataset.cat.toLowerCase();
+            const supplier = row.dataset.supplier.toLowerCase();
+            const stock = parseInt(row.dataset.stock) || 0;
+            
+            const matchesQuery = query === "" || name.includes(query) || cat.includes(query) || supplier.includes(query);
+            
+            let matchesStock = false;
+            if (filterLevel === "All") {
+                matchesStock = true;
+            } else if (filterLevel === "InStock") {
+                matchesStock = stock > 0;
+            } else if (filterLevel === "LowStock") {
+                matchesStock = stock > 0 && stock < 10;
+            } else if (filterLevel === "OutOfStock") {
+                matchesStock = stock === 0;
+            }
+            
+            const matchesCat = filterCat === "All" || cat === filterCat.toLowerCase();
+            
+            if (matchesQuery && matchesStock && matchesCat) {
+                row.classList.remove('hidden');
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+    }
+
+    // Toast alert triggers
+    let toastTimeout;
+    function showNotification(msg) {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+        if (!toast || !toastMsg) return;
+        
+        toastMsg.textContent = msg;
+        toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            hideToast();
+        }, 3000);
+    }
+    
+    function hideToast() {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-[-100px]', 'opacity-0');
+        }
+    }
+
+    function downloadIQReport(format) {
+        alert(`Namaste! Generating RetailIQ inventory report summary in ${format} format. The download will start automatically.`);
+    }
+
+    function mockAction(msg) {
+        alert(`RetailIQ System Notice: ${msg}`);
+    }
+</script>
+{% endblock %}

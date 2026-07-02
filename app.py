@@ -949,6 +949,62 @@ def customer_dashboard():
     )
 
 
+@app.route('/inventory')
+@app.route('/admin/inventory_manager')
+def inventory_manager():
+    """Enterprise-grade Inventory Management page for RetailIQ."""
+    user = get_current_user()
+    if not user:
+        flash("Please log in to access the RetailIQ Inventory Management panel.", "error")
+        return redirect(url_for('login'))
+        
+    if user['role'] not in ["Owner", "Clerk"]:
+        flash("Access Denied! Enterprise dashboard requires Clerk or Owner clearance.", "error")
+        return redirect(url_for('login'))
+        
+    # Calculate stats
+    total_val = sum(p['price'] * p['stock'] for p in products_db)
+    products_in_stock = len([p for p in products_db if p['stock'] > 0])
+    low_stock_items = len([p for p in products_db if 0 < p['stock'] < 10])
+    out_of_stock_items = len([p for p in products_db if p['stock'] == 0])
+    
+    # Mock warehouses
+    warehouses = [
+        {"name": "Rampur Main Warehouse", "capacity": "85%", "temp": "22°C", "products": 450, "utilization": 85},
+        {"name": "Mishra Tola Cold Storage", "capacity": "60%", "temp": "4°C", "products": 120, "utilization": 60},
+        {"name": "Town Transit Hub", "capacity": "40%", "temp": "26°C", "products": 85, "utilization": 40}
+    ]
+    
+    # Mock stock movements
+    movements = [
+        {"type": "Stock Added", "desc": "Restocked 50 units of Amul Milk (1L) from supplier Ganga Dairy.", "time": "1 hour ago", "icon": "plus-circle", "color": "text-[#16A34A]"},
+        {"type": "Sale Out", "desc": "12 units of Maggi Noodles sold under order #1004.", "time": "3 hours ago", "icon": "arrow-down-right", "color": "text-[#2563EB]"},
+        {"type": "Transfer", "desc": "Transferred 20 units of Mustard Oil to Town Transit Hub.", "time": "Yesterday", "icon": "git-pull-request", "color": "text-[#F97316]"},
+        {"type": "Adjustment", "desc": "Reduced 2 units of Surf Excel due to packaging damage.", "time": "2 days ago", "icon": "sliders", "color": "text-slate-500"}
+    ]
+    
+    # Mock supplier parameters
+    suppliers = [
+        {"name": "Ganga Dairy Cooperative", "phone": "+91 98765 09901", "products": "Milk, Butter, Ghee", "balance": 4500, "lead_time": "1.5 Days"},
+        {"name": "Rampur Krishi Mandi", "phone": "+91 98765 09902", "products": "Rice, Wheat, Dal", "balance": 12000, "lead_time": "2.0 Days"},
+        {"name": "Hindustan Unilever Distributor", "phone": "+91 98765 09903", "products": "Soaps, Detergents, Toothpaste", "balance": 8500, "lead_time": "3.5 Days"}
+    ]
+
+    return render_template(
+        'inventory_manager.html',
+        products=products_db,
+        warehouses=warehouses,
+        movements=movements,
+        suppliers=suppliers,
+        total_val=total_val,
+        products_in_stock=products_in_stock,
+        low_stock_items=low_stock_items,
+        out_of_stock_items=out_of_stock_items,
+        categories=categories,
+        settings=settings
+    )
+
+
 @app.route('/delivery_dashboard')
 def delivery_dashboard():
     """Specialized delivery staff mobile workspace."""
