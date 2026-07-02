@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}My Basket & Checkout - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
+{% block title %}My Basket & Checkout - {{ settings.store_name if settings else 'Grocify' }}{% endblock %}
 
 {% block content %}
 <style>
@@ -173,7 +173,7 @@
 
         <div class="space-y-2">
             <h3 class="text-2xl font-serif font-bold text-[#4E342E]">Order Placed Successfully!</h3>
-            <p class="text-xs text-[#2E7D32] font-bold uppercase tracking-widest">Namaste, thanks for trusting Pramod General Store!</p>
+            <p class="text-xs text-[#2E7D32] font-bold uppercase tracking-widest">Namaste, thanks for trusting Grocify!</p>
             <div class="p-3 bg-[#FAF4E8]/60 border border-[#D9A441]/25 rounded-2xl max-w-md mx-auto space-y-1 mt-4 text-xs text-slate-600 font-semibold leading-relaxed">
                 <p>Order ID: <strong class="text-[#4E342E] font-mono" id="success-order-id">#1005</strong></p>
                 <p>Delivery Slot: <strong class="text-[#2E7D32]" id="success-delivery-slot">Tomorrow Morning</strong></p>
@@ -250,7 +250,7 @@
                     </div>
                     
                     <div class="text-xs space-y-1 text-slate-600 font-semibold leading-relaxed">
-                        <p class="font-bold text-[#4E342E] inline-block" id="display-name">{{ customer_name if customer_name else 'Pramod Guest' }}</p>
+                        <p class="font-bold text-[#4E342E] inline-block" id="display-name">{{ customer_name if customer_name else 'Grocify Guest' }}</p>
                         <p id="display-mobile" class="text-[10px] font-mono text-slate-400">+91 {{ mobile if mobile else '9876501100' }}</p>
                         <p id="display-full-address" class="font-normal text-slate-500">{{ address if address else 'Counter Cash Purchase, Main Bazaar' }}</p>
                         <p id="display-village-pin" class="text-[10px] text-slate-400 font-bold uppercase">{{ village if village else 'Rampur' }} - {{ pincode if pincode else '250101' }}</p>
@@ -533,7 +533,7 @@
 
 <script>
     // State management
-    let pageCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+    let pageCart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
     let isEditingAddress = false;
     let couponDiscount = 0;
     let activeCoupon = "";
@@ -631,7 +631,7 @@
             const nextQty = item.quantity + change;
             if (nextQty >= 1 && nextQty <= item.maxStock) {
                 item.quantity = nextQty;
-                localStorage.setItem('pramod_store_cart', JSON.stringify(pageCart));
+                localStorage.setItem('grocify_cart', JSON.stringify(pageCart));
                 
                 // Keep global base badge count updated
                 if (typeof updateHeaderCartBadge === 'function') {
@@ -649,7 +649,7 @@
     // Remove item
     function removeFromPageCart(id) {
         pageCart = pageCart.filter(i => i.id !== id);
-        localStorage.setItem('pramod_store_cart', JSON.stringify(pageCart));
+        localStorage.setItem('grocify_cart', JSON.stringify(pageCart));
         if (typeof updateHeaderCartBadge === 'function') {
             updateHeaderCartBadge();
         }
@@ -677,7 +677,7 @@
             });
         }
         
-        localStorage.setItem('pramod_store_cart', JSON.stringify(pageCart));
+        localStorage.setItem('grocify_cart', JSON.stringify(pageCart));
         if (typeof updateHeaderCartBadge === 'function') {
             updateHeaderCartBadge();
         }
@@ -975,7 +975,7 @@
                     triggerSuccessConfetti();
                     
                     // Reset localStorage cart
-                    localStorage.removeItem('pramod_store_cart');
+                    localStorage.removeItem('grocify_cart');
                     if (typeof updateHeaderCartBadge === 'function') {
                         updateHeaderCartBadge();
                     }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}</title>
+    <title>{% block title %}{{ settings.store_name if settings else 'Grocify' }}{% endblock %}</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -63,10 +63,10 @@
                         प्रमोद जनरल स्टोर
                     </h1>
                     <h2 class="text-xl md:text-2xl font-extrabold tracking-widest text-[#E5A93B] uppercase font-serif" style="text-shadow: 1.5px 1.5px 0px rgba(0,0,0,0.5);">
-                        {{ settings.store_name if settings else 'Pramod General Store' }}
+                        {{ settings.store_name if settings else 'Grocify' }}
                     </h2>
                     <span class="block text-[10px] text-[#F5E6CA]/80 font-semibold tracking-widest uppercase mt-0.5 font-sans">
-                        &ldquo;{{ settings.tagline if settings else 'Trusted Since Generations' }}&rdquo;
+                        &ldquo;{{ settings.tagline if settings else 'Smart Grocery & Retail Management Platform' }}&rdquo;
                     </span>
                 </div>
             </div>
@@ -164,13 +164,13 @@
     <footer class="w-full shrink-0 bg-[#4E342E] text-[#F5E6CA]/80 py-8 border-t border-[#E5A93B]/20 relative overflow-hidden">
         <div class="absolute inset-0 bg-[radial-gradient(#5d3f37_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
         <div class="max-w-7xl mx-auto px-6 text-center space-y-4 relative z-10">
-            <h3 class="text-lg font-serif font-bold text-[#E5A93B] tracking-wider uppercase">{{ settings.store_name if settings else 'PRAMOD GENERAL STORE' }}</h3>
+            <h3 class="text-lg font-serif font-bold text-[#E5A93B] tracking-wider uppercase">{{ settings.store_name if settings else 'GROCIFY' }}</h3>
             <p class="text-xs max-w-md mx-auto leading-relaxed text-[#F5E6CA]/60">
                 &ldquo;Bringing the warmth of the traditional village market into the digital age. Offering fresh groceries, staples, and household essentials with trusted local service.&rdquo;
             </p>
             <div class="border-t border-[#F5E6CA]/10 w-24 mx-auto my-3"></div>
             <p class="text-[10px] tracking-wider uppercase font-semibold text-[#F5E6CA]/40">
-                &copy; 2026 Pramod General Store &middot; Village Heritage Digital Marketplace
+                &copy; 2026 Grocify &middot; AI-Powered Grocery & Retail Management Platform
             </p>
         </div>
     </footer>
@@ -194,7 +194,7 @@
         function updateHeaderCartBadge() {
             const badge = document.getElementById('header-cart-badge');
             if (!badge) return;
-            const cartItems = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+            const cartItems = JSON.parse(localStorage.getItem('grocify_cart')) || [];
             const totalQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
             badge.textContent = totalQty;
             if (totalQty > 0) {

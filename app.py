@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Pramod General Store - Production-Grade Kirana ERP & Rural Commerce Platform
+Grocify - AI-Powered Grocery & Retail Management Platform
 Core Flask backend application.
 """
 
@@ -11,12 +11,12 @@ import json
 import math
 
 app = Flask(__name__)
-app.secret_key = "pramod_store_village_secret_key"
+app.secret_key = "grocify_retail_erp_secret_key"
 
 # --- GLOBAL SYSTEM SETTINGS ---
 settings = {
-    "store_name": "Pramod General Store",
-    "tagline": "Trusted Since Generations",
+    "store_name": "Grocify",
+    "tagline": "Smart Grocery & Retail Management Platform",
     "delivery_charge": 30,
     "free_delivery_threshold": 500,
     "default_credit_limit": 10000,
@@ -27,7 +27,7 @@ settings = {
 
 # 1. User accounts database
 users_db = [
-    {"username": "owner", "password": "owner123", "role": "Owner", "name": "Pramod Ji", "mobile": "9876501100"},
+    {"username": "owner", "password": "owner123", "role": "Owner", "name": "Grocify Team", "mobile": "9876501100"},
     {"username": "clerk", "password": "clerk123", "role": "Clerk", "name": "Ramji Prasad", "mobile": "9876501199"},
     {"username": "delivery", "password": "delivery123", "role": "Delivery Boy", "name": "Sanjay Kumar", "mobile": "9876502201"},
     {"username": "customer", "password": "customer123", "role": "Customer", "name": "Ramesh Kumar Mishra", "mobile": "9876501101"}
@@ -224,7 +224,7 @@ audit_logs_db = [
         "user": "owner",
         "role": "Owner",
         "action": "System Start",
-        "details": "Pramod General Store production-grade marketplace initial setup loaded."
+        "details": "Grocify production-grade marketplace initial setup loaded."
     }
 ]
 
@@ -233,7 +233,7 @@ whatsapp_logs_db = [
     {
         "timestamp": "2026-06-14 14:02:10",
         "mobile": "9876501115",
-        "message": "Namaste Sanjay Ojha, your order #1004 of ₹490 has been received. Thanks for shopping at Pramod Store!",
+        "message": "Namaste Sanjay Ojha, your order #1004 of ₹490 has been received. Thanks for shopping at Grocify!",
         "status": "Sent"
     }
 ]
@@ -644,7 +644,7 @@ def checkout():
             }
             khata_db.append(ledger)
             
-        send_whatsapp(mobile, f"Khata Alert: Order #{order_id} charged to credit. ₹{grand_total:,} added. Outstanding: ₹{ledger['outstanding_amount']:,}. - Pramod Store")
+        send_whatsapp(mobile, f"Khata Alert: Order #{order_id} charged to credit. ₹{grand_total:,} added. Outstanding: ₹{ledger['outstanding_amount']:,}. - Grocify")
         
     today_date = datetime.now().strftime("%Y-%m-%d")
     today_sales = next((day for day in sales_history if day['date'] == today_date), None)
@@ -662,9 +662,9 @@ def checkout():
         })
         
     log_audit("Order Placed", f"Order #{order_id} placed successfully via {payment_method}. Amount: ₹{grand_total:,}")
-    send_whatsapp(mobile, f"Namaste {name}, your order #{order_id} of ₹{grand_total:,} has been received. Thanks for trusting Pramod General Store!")
+    send_whatsapp(mobile, f"Namaste {name}, your order #{order_id} of ₹{grand_total:,} has been received. Thanks for trusting Grocify!")
     
-    flash(f"Order #{order_id} placed successfully! Thank you for trusting Pramod General Store.", "success")
+    flash(f"Order #{order_id} placed successfully! Thank you for trusting Grocify.", "success")
     return redirect(url_for('index'))
 
 @app.route('/order/<int:order_id>/invoice')
@@ -811,7 +811,7 @@ def product_details(product_id):
         {"name": "Ramesh Kumar Mishra", "rating": 5, "date": "2026-06-10", "comment": "Excellent quality! Packaging was original and fresh. Highly recommended.", "verified": True, "helpful": 12},
         {"name": "Gita Devi", "rating": 5, "date": "2026-06-08", "comment": "Bahut accha product hai. Price is very reasonable compared to local city market.", "verified": True, "helpful": 8},
         {"name": "Mahendra Singh", "rating": 4, "date": "2026-06-01", "comment": "Good quality and authentic taste. Delivery boy Sanjay brought it on time.", "verified": True, "helpful": 5},
-        {"name": "Suresh Chandra", "rating": 5, "date": "2026-05-28", "comment": "Standard packaging. Clean and fresh. Pramod Ji always delivers the best.", "verified": True, "helpful": 15}
+        {"name": "Suresh Chandra", "rating": 5, "date": "2026-05-28", "comment": "Standard packaging. Clean and fresh. Grocify Team always delivers the best.", "verified": True, "helpful": 15}
     ]
     
     # Deterministic mock sample based on product ID to avoid page reload randomness
@@ -824,8 +824,8 @@ def product_details(product_id):
     
     # Mock specifications and nutrition based on category
     specs = {
-        "Brand": product['supplier'] if 'supplier' in product else "Pramod Fresh",
-        "Manufacturer": product['supplier'] if 'supplier' in product else "Pramod General Store",
+        "Brand": product['supplier'] if 'supplier' in product else "Grocify Fresh",
+        "Manufacturer": product['supplier'] if 'supplier' in product else "Grocify",
         "Shelf Life": "6 Months" if product['category'] in ["Rice & Flour", "Pulses & Grains", "Oils & Spices", "Grocery & Staples"] else "12 Months",
         "Storage": "Store in dry place, away from sunlight" if product['category'] not in ["Dairy Products"] else "Refrigerate after opening",
         "Country of Origin": "India"
@@ -952,10 +952,10 @@ def customer_dashboard():
 @app.route('/inventory')
 @app.route('/admin/inventory_manager')
 def inventory_manager():
-    """Enterprise-grade Inventory Management page for RetailIQ."""
+    """Enterprise-grade Inventory Management page for Grocify."""
     user = get_current_user()
     if not user:
-        flash("Please log in to access the RetailIQ Inventory Management panel.", "error")
+        flash("Please log in to access the Grocify Inventory Management panel.", "error")
         return redirect(url_for('login'))
         
     if user['role'] not in ["Owner", "Clerk"]:
@@ -1128,9 +1128,9 @@ def update_delivery(order_id):
     log_audit("Delivery Status Updated", f"Order #{order_id} status changed from '{old_status}' to '{new_status}'. Assigned: {db_name}")
     
     if new_status == "Out for Delivery":
-        send_whatsapp(order['mobile'], f"Namaste {order['customer_name']}, your order #{order_id} is Out for Delivery with our agent {db_name}. - Pramod Store")
+        send_whatsapp(order['mobile'], f"Namaste {order['customer_name']}, your order #{order_id} is Out for Delivery with our agent {db_name}. - Grocify")
     elif new_status == "Delivered":
-        send_whatsapp(order['mobile'], f"Namaste {order['customer_name']}, your order #{order_id} has been delivered successfully. Thank you! - Pramod Store")
+        send_whatsapp(order['mobile'], f"Namaste {order['customer_name']}, your order #{order_id} has been delivered successfully. Thank you! - Grocify")
         
     flash(f"Order #{order_id} updated successfully.", "success")
     
@@ -1155,7 +1155,7 @@ def update_khata(mobile):
         old_limit = ledger['credit_limit']
         ledger['credit_limit'] = new_limit
         log_audit("Khata Limit Updated", f"Credit limit for {ledger['customer_name']} updated from ₹{old_limit:,} to ₹{new_limit:,}")
-        send_whatsapp(mobile, f"Khata Notice: Your family credit limit has been adjusted to ₹{new_limit:,}. - Pramod Store")
+        send_whatsapp(mobile, f"Khata Notice: Your family credit limit has been adjusted to ₹{new_limit:,}. - Grocify")
         flash(f"Credit limit for {ledger['customer_name']} updated successfully to ₹{new_limit:,}.", "success")
     else:
         description = request.form.get('description')
@@ -1174,7 +1174,7 @@ def update_khata(mobile):
                 "amount": amount
             })
             log_audit("Khata Credit Charged", f"Manually charged ₹{amount:,} to {ledger['customer_name']}'s account. Memo: {description}")
-            send_whatsapp(mobile, f"Khata Alert: ₹{amount:,} charged. Outstanding Balance: ₹{ledger['outstanding_amount']:,}. - Pramod Store")
+            send_whatsapp(mobile, f"Khata Alert: ₹{amount:,} charged. Outstanding Balance: ₹{ledger['outstanding_amount']:,}. - Grocify")
             flash(f"Recorded credit purchase of ₹{amount} for {ledger['customer_name']}.", "success")
         else:
             ledger['outstanding_amount'] = max(ledger['outstanding_amount'] - amount, 0)
@@ -1185,7 +1185,7 @@ def update_khata(mobile):
                 "amount": amount
             })
             log_audit("Khata Payment Receipt", f"Recorded payment of ₹{amount:,} from {ledger['customer_name']}. Memo: {description}")
-            send_whatsapp(mobile, f"Khata Receipt: We have received payment of ₹{amount:,}. Outstanding Balance: ₹{ledger['outstanding_amount']:,}. - Pramod Store")
+            send_whatsapp(mobile, f"Khata Receipt: We have received payment of ₹{amount:,}. Outstanding Balance: ₹{ledger['outstanding_amount']:,}. - Grocify")
             flash(f"Recorded payment receipt of ₹{amount} from {ledger['customer_name']}.", "success")
             
     return redirect(url_for('admin', tab='ledger'))
@@ -1238,7 +1238,7 @@ def backup_database():
     return Response(
         response_data,
         mimetype="application/json",
-        headers={"Content-disposition": f"attachment; filename=pramod_store_backup_{timestamp}.json"}
+        headers={"Content-disposition": f"attachment; filename=grocify_backup_{timestamp}.json"}
     )
 
 @app.route('/admin/restore', methods=['POST'])
@@ -1287,8 +1287,8 @@ def reset_system():
     global products_db, khata_db, orders_db, sales_history, whatsapp_logs_db, audit_logs_db, settings, delivery_boys_db, users_db
     
     settings = {
-        "store_name": "Pramod General Store",
-        "tagline": "Trusted Since Generations",
+        "store_name": "Grocify",
+        "tagline": "Smart Grocery & Retail Management Platform",
         "delivery_charge": 30,
         "free_delivery_threshold": 500,
         "default_credit_limit": 10000,
@@ -1296,7 +1296,7 @@ def reset_system():
     }
     
     users_db = [
-        {"username": "owner", "password": "owner123", "role": "Owner", "name": "Pramod Ji", "mobile": "9876501100"},
+        {"username": "owner", "password": "owner123", "role": "Owner", "name": "Grocify Team", "mobile": "9876501100"},
         {"username": "clerk", "password": "clerk123", "role": "Clerk", "name": "Ramji Prasad", "mobile": "9876501199"},
         {"username": "delivery", "password": "delivery123", "role": "Delivery Boy", "name": "Sanjay Kumar", "mobile": "9876502201"},
         {"username": "customer", "password": "customer123", "role": "Customer", "name": "Ramesh Kumar Mishra", "mobile": "9876501101"}
@@ -1503,6 +1503,6 @@ def reset_system():
     return redirect(url_for('admin', tab='settings'))
 
 if __name__ == '__main__':
-    print("Pramod General Store is starting up...")
+    print("Grocify is starting up...")
     print("Local URL: http://127.0.0.1:5001")
     app.run(debug=True, host='127.0.0.1', port=5001)

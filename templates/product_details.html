@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ product.name }} - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
+{% block title %}{{ product.name }} - {{ settings.store_name if settings else 'Grocify' }}{% endblock %}
 
 {% block content %}
 <style>
@@ -225,7 +225,7 @@
                     <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>100% Fresh & Authentic</span></div>
                     <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>Secure Wooden Crate Pack</span></div>
                     <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>Cash On Village Delivery</span></div>
-                    <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>Trusted Since Generations</span></div>
+                    <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>Smart Grocery & Retail Management Platform</span></div>
                 </div>
             </div>
 
@@ -598,7 +598,7 @@
         const price = {{ product.price }};
         
         // Retrieve cart
-        let activeCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+        let activeCart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
         
         let existing = activeCart.find(item => item.id === id);
         if (existing) {
@@ -619,7 +619,7 @@
         }
         
         // Save back
-        localStorage.setItem('pramod_store_cart', JSON.stringify(activeCart));
+        localStorage.setItem('grocify_cart', JSON.stringify(activeCart));
         
         // Update local cart variable in main.js if accessible
         if (typeof cart !== 'undefined') {
@@ -641,7 +641,7 @@
         const container = document.getElementById('floating-cart-btn');
         if (!badge || !container) return;
         
-        let activeCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+        let activeCart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
         const totalQty = activeCart.reduce((sum, item) => sum + item.quantity, 0);
         badge.textContent = totalQty;
         

@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}RetailIQ - Enterprise Inventory Console{% endblock %}
+{% block title %}Grocify - Enterprise Inventory Console{% endblock %}
 
 {% block content %}
 <style>
-    /* RetailIQ Design Tokens */
+    /* Grocify Design Tokens */
     :root {
         --color-primary: #2563EB; /* Royal Blue */
         --color-success: #16A34A; /* Emerald Green */
@@ -41,7 +41,7 @@
 <!-- Standalone Split Grid Layout -->
 <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-slide-up bg-[#FAF9F6]/50 p-1 rounded-3xl">
     
-    <!-- LEFT SIDEBAR: RetailIQ Brand & Tab Navigation (25%) -->
+    <!-- LEFT SIDEBAR: Grocify Brand & Tab Navigation (25%) -->
     <div class="col-span-1 md:col-span-3 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
         <!-- Brand Title Header -->
         <div class="flex items-center space-x-2.5 pb-6 border-b border-slate-100">
@@ -49,7 +49,7 @@
                 <i data-lucide="cpu" class="w-6 h-6"></i>
             </div>
             <div>
-                <h2 class="text-base font-extrabold text-slate-800 tracking-tight leading-tight">RetailIQ</h2>
+                <h2 class="text-base font-extrabold text-slate-800 tracking-tight leading-tight">Grocify</h2>
                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Enterprise Stock</span>
             </div>
         </div>
@@ -126,7 +126,7 @@
         <!-- TOP CONTROL HEADBAR: Welcome & Action Tools -->
         <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden">
             <div>
-                <span class="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider block">RetailIQ Business Intelligence</span>
+                <span class="text-[9px] font-bold text-[#2563EB] uppercase tracking-wider block">Grocify Business Intelligence</span>
                 <h2 class="text-xl font-extrabold text-slate-800 mt-0.5">Enterprise stock console</h2>
             </div>
             
@@ -150,7 +150,7 @@
                 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
                 
                 <div class="space-y-1 z-10">
-                    <span class="text-[9px] font-bold uppercase tracking-widest text-blue-100">RetailIQ Intelligence Agency</span>
+                    <span class="text-[9px] font-bold uppercase tracking-widest text-blue-100">Grocify Intelligence Agency</span>
                     <h2 class="text-xl font-extrabold tracking-tight">Good Morning, {{ user.name if user else 'Owner' }} 👋</h2>
                     <p class="text-xs text-blue-100/90 font-medium">The AI Command Center is monitoring inventory levels, transaction velocities, and supplier lead-times.</p>
                 </div>
@@ -180,7 +180,7 @@
                     <div class="flex items-start space-x-2.5">
                         <div class="w-6 h-6 rounded-lg bg-[#2563EB] text-white flex items-center justify-center font-bold text-[10px] shrink-0">AI</div>
                         <div class="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none text-slate-600 max-w-[85%] leading-relaxed shadow-sm font-semibold">
-                            Namaste! I am the RetailIQ AI Assistant. Click any suggestion prompt below or type your inquiry to analyze real-time business performance.
+                            Namaste! I am the Grocify AI Assistant. Click any suggestion prompt below or type your inquiry to analyze real-time business performance.
                         </div>
                     </div>
                 </div>
@@ -194,7 +194,7 @@
 
                 <!-- Input area -->
                 <div class="flex items-center bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2">
-                    <input type="text" id="ai-chat-input" placeholder="Ask RetailIQ AI..." class="w-full bg-transparent border-none text-xs text-slate-700 focus:outline-none p-0 border-0 outline-none">
+                    <input type="text" id="ai-chat-input" placeholder="Ask Grocify AI..." class="w-full bg-transparent border-none text-xs text-slate-700 focus:outline-none p-0 border-0 outline-none">
                     <button type="button" onclick="sendAIChatMsg()" class="p-2 bg-[#2563EB] hover:bg-blue-750 text-white rounded-xl transition-all shadow-md shrink-0 ml-3">
                         <i data-lucide="send" class="w-4 h-4"></i>
                     </button>
@@ -1138,7 +1138,7 @@
                         <div class="p-2 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] text-white rounded-full shadow-lg border-2 border-white scale-110">
                             <i data-lucide="warehouse" class="w-4 h-4"></i>
                         </div>
-                        <span class="text-[8px] font-bold text-slate-700 bg-white border border-slate-100 px-1.5 py-0.5 rounded mt-1 shadow-sm font-semibold">RetailIQ Hub</span>
+                        <span class="text-[8px] font-bold text-slate-700 bg-white border border-slate-100 px-1.5 py-0.5 rounded mt-1 shadow-sm font-semibold">Grocify Hub</span>
                     </div>
 
                     <!-- Active Delivery Bike Marker -->
@@ -1834,7 +1834,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Store Name</label>
-                                <input type="text" value="RetailIQ Hub" class="w-full px-3.5 py-2 border border-slate-100 bg-slate-50/50 rounded-xl focus:outline-none focus:border-[#2563EB]">
+                                <input type="text" value="Grocify Hub" class="w-full px-3.5 py-2 border border-slate-100 bg-slate-50/50 rounded-xl focus:outline-none focus:border-[#2563EB]">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">FSSAI License No.</label>
@@ -2384,11 +2384,11 @@
     }
 
     function downloadIQReport(format) {
-        alert(`Namaste! Generating RetailIQ inventory report summary in ${format} format. The download will start automatically.`);
+        alert(`Namaste! Generating Grocify inventory report summary in ${format} format. The download will start automatically.`);
     }
 
     function mockAction(msg) {
-        alert(`RetailIQ System Notice: ${msg}`);
+        alert(`Grocify System Notice: ${msg}`);
     }
 
     // Supplier Drawer controllers
@@ -2688,7 +2688,7 @@
             } else if (prompt.toLowerCase().includes('slow')) {
                 aiText = "Slow-moving items detected: **Toothpaste (150g)** (0 sales in 15 days) and **Washing Powder (1kg)**. I recommend applying a 15% discount combi offer.";
             } else {
-                aiText = "Understood. Analyzing parameters. The RetailIQ predictive models forecast stable sales with no late supplier deliveries expected this week.";
+                aiText = "Understood. Analyzing parameters. The Grocify predictive models forecast stable sales with no late supplier deliveries expected this week.";
             }
             
             aiDiv.innerHTML = `

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}My Account Dashboard - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
+{% block title %}My Account Dashboard - {{ settings.store_name if settings else 'Grocify' }}{% endblock %}
 
 {% block content %}
 <style>
@@ -418,7 +418,7 @@
                     </div>
                     <div class="space-y-1">
                         <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</span>
-                        <p class="p-3 bg-[#FAF4E8]/40 border border-slate-100 rounded-xl text-slate-700 font-normal">{{ user.username }}@pramodstore.com</p>
+                        <p class="p-3 bg-[#FAF4E8]/40 border border-slate-100 rounded-xl text-slate-700 font-normal">{{ user.username }}@grocify.com</p>
                     </div>
                     <div class="space-y-1">
                         <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Membership Rank</span>
@@ -478,7 +478,7 @@
                         <div class="p-3.5 bg-orange-50/20 border border-orange-100 rounded-2xl flex items-center justify-between">
                             <span class="flex items-center space-x-3">
                                 <i data-lucide="phone" class="w-5 h-5 text-[#C96A2B]"></i>
-                                <span>Pramod Ji Store Counter</span>
+                                <span>Grocify POS Counter</span>
                             </span>
                             <a href="tel:+919876501100" class="px-3.5 py-1.5 bg-[#C96A2B] text-white text-[10px] font-bold rounded-lg uppercase tracking-wider">Call</a>
                         </div>
@@ -599,7 +599,7 @@
     function reorderItems(itemsStr) {
         // Items string example: "Surf Excel Soap x2, Amul Milk x1"
         const items = itemsStr.split(', ');
-        let activeCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+        let activeCart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
         
         items.forEach(itemStr => {
             const match = itemStr.match(/(.+?)\s*x(\d+)$/);
@@ -627,7 +627,7 @@
             }
         });
         
-        localStorage.setItem('pramod_store_cart', JSON.stringify(activeCart));
+        localStorage.setItem('grocify_cart', JSON.stringify(activeCart));
         if (typeof updateHeaderCartBadge === 'function') {
             updateHeaderCartBadge();
         }

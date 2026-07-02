@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ settings.store_name if settings else 'Pramod General Store' }} - Village Bazar{% endblock %}
+{% block title %}{{ settings.store_name if settings else 'Grocify' }} - Village Bazar{% endblock %}
 
 {% block content %}
 <!-- Customer Workspace Tabs -->
@@ -82,7 +82,7 @@
             <div class="absolute inset-0 bg-[#E5A93B]/5 opacity-30"></div>
             <div>
                 <span class="text-[9px] font-bold text-[#C65D2E] uppercase tracking-widest block">Village Heritage Kirana</span>
-                <h3 class="text-xl font-serif font-bold text-[#4E342E] mt-1">Welcome to {{ settings.store_name if settings else 'Pramod General Store' }}</h3>
+                <h3 class="text-xl font-serif font-bold text-[#4E342E] mt-1">Welcome to {{ settings.store_name if settings else 'Grocify' }}</h3>
                 <p class="text-xs text-[#4E342E]/80 mt-2 leading-relaxed max-w-lg">
                     Discover fresh groceries, staples, flour, spices, and everyday household essentials delivered directly with the same trust and warmth of village hospitality.
                 </p>
@@ -432,7 +432,7 @@
                 <span class="bg-blue-500 text-white font-bold h-7 w-7 rounded flex items-center justify-center text-sm shadow">R</span>
                 <div>
                     <h4 class="text-xs font-bold tracking-wide text-blue-400 uppercase">Razorpay Secure</h4>
-                    <span class="text-[9px] text-slate-300 block">Pramod General Store Checkout</span>
+                    <span class="text-[9px] text-slate-300 block">Grocify Checkout</span>
                 </div>
             </div>
             <button onclick="closeRazorpayModal()" class="text-slate-400 hover:text-white transition-colors">
@@ -513,11 +513,11 @@
         </button>
         
         <h4 class="text-base font-serif font-bold text-[#4E342E] uppercase">Scan QR to Complete Payment</h4>
-        <p class="text-xs text-slate-500 font-semibold">Pramod General Store Unified Merchant Account</p>
+        <p class="text-xs text-slate-500 font-semibold">Grocify Unified Merchant Account</p>
         
         <div class="mx-auto w-48 h-48 bg-slate-100 p-2.5 rounded-xl border border-slate-200 flex items-center justify-center relative">
             <div class="absolute inset-4 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#C65D2E_10px,#C65D2E_20px)]"></div>
-            <div class="h-40 w-40 bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=pramodstore@upi%26pn=Pramod%20General%20Store%26am=100%26cu=INR')] bg-cover relative z-10"></div>
+            <div class="h-40 w-40 bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=grocify@upi%26pn=Grocify%26am=100%26cu=INR')] bg-cover relative z-10"></div>
         </div>
 
         <div class="bg-orange-50/50 p-3 rounded-xl border border-orange-100 text-[10px] text-orange-900 leading-normal font-semibold">
