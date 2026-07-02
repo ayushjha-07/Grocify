@@ -20,6 +20,12 @@
                         <span>Dashboard</span>
                     </span>
                 </button>
+                <button onclick="switchAdminTab('orders')" id="nav-orders" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="receipt" class="w-4 h-4"></i>
+                        <span>Order Manager</span>
+                    </span>
+                </button>
                 <button onclick="switchAdminTab('inventory')" id="nav-inventory" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
                     <span class="flex items-center space-x-2">
                         <i data-lucide="package" class="w-4 h-4"></i>
@@ -192,6 +198,208 @@
                 </div>
             </div>
         </section>
+
+        <!-- Tab 12: Order Management -->
+        <section id="tab-orders" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-[#4E342E]">Order Management System</h3>
+                    <p class="text-xs text-slate-400">Track pending dispatches, assign delivery boys, print invoices, and update order statuses.</p>
+                </div>
+                
+                <button type="button" onclick="mockAction('New order draft creator opened.')" class="px-4 py-2.5 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center space-x-1.5 shrink-0">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Create New Order</span>
+                </button>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Search Orders</label>
+                        <div class="relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/10 rounded-xl px-3 py-2">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
+                            <input type="text" id="order-search-inp" oninput="filterOrdersTable()" placeholder="ID, Customer, or Mobile..." class="w-full bg-transparent border-none text-xs text-[#4E342E] placeholder-[#4A2F2A]/40 focus:outline-none p-0">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order Status</label>
+                        <select id="order-filter-status" onchange="filterOrdersTable()" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-xl focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                            <option value="All">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Preparing">Preparing</option>
+                            <option value="Packed">Packed</option>
+                            <option value="Out for Delivery">Out for Delivery</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment Method</label>
+                        <select id="order-filter-pay" onchange="filterOrdersTable()" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-xl focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                            <option value="All">All Methods</option>
+                            <option value="Cash on Delivery">Cash on Delivery</option>
+                            <option value="Khata Credit">Khata Credit</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Card">Card</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table Card -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs font-semibold" id="orders-admin-table">
+                    <thead>
+                        <tr class="border-b border-[#4E342E]/10 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-[#F5E6CA]/10">
+                            <th class="px-4 py-3">Order ID</th>
+                            <th class="px-4 py-3">Customer</th>
+                            <th class="px-4 py-3">Products Ordered</th>
+                            <th class="px-4 py-3">Grand Total</th>
+                            <th class="px-4 py-3">Method</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for o in orders %}
+                        <tr class="order-row hover:bg-orange-50/20 border-b border-[#4E342E]/5 text-slate-600" 
+                            data-id="{{ o.order_id }}"
+                            data-name="{{ o.customer_name }}"
+                            data-mobile="{{ o.mobile }}"
+                            data-address="{{ o.address }}"
+                            data-village="{{ o.village }}"
+                            data-pincode="{{ o.pincode }}"
+                            data-items="{{ o.items }}"
+                            data-total="{{ o.total_amount }}"
+                            data-pay="{{ o.payment_method }}"
+                            data-status="{{ o.status }}"
+                            data-delivery-boy-id="{{ o.delivery_boy_id }}"
+                            data-date="{{ o.date }}">
+                            
+                            <td class="px-4 py-3 font-mono font-bold text-[#4E342E]">#{{ o.order_id }}</td>
+                            <td class="px-4 py-3">
+                                <span class="block font-bold text-[#4E342E] leading-tight">{{ o.customer_name }}</span>
+                                <span class="block text-[9px] text-slate-400 font-mono font-normal">+91 {{ o.mobile }}</span>
+                            </td>
+                            <td class="px-4 py-3 max-w-[200px] truncate" title="{{ o.items }}">{{ o.items }}</td>
+                            <td class="px-4 py-3 font-extrabold text-[#4E342E]">₹{{ o.total_amount }}</td>
+                            <td class="px-4 py-3 text-[10px] text-slate-400 font-bold uppercase">{{ o.payment_method }}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold 
+                                    {% if o.status == 'Delivered' %}
+                                        bg-emerald-50 text-emerald-700 border border-emerald-100
+                                    {% elif o.status == 'Cancelled' %}
+                                        bg-rose-50 text-rose-700 border border-rose-100
+                                    {% elif o.status == 'Out for Delivery' %}
+                                        bg-indigo-50 text-indigo-700 border border-indigo-100 animate-pulse
+                                    {% else %}
+                                        bg-blue-50 text-blue-700 border border-blue-100
+                                    {% endif %}">
+                                    {{ o.status }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <button type="button" onclick="openOrderDrawer(this)" class="px-2.5 py-1.5 bg-[#FAF4E8] text-[#C96A2B] hover:bg-[#C96A2B]/10 rounded-lg text-[10px] font-bold border border-[#C96A2B]/30 transition-all">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Order Details Side Drawer Panel (Slide-In) -->
+        <div id="order-detail-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-[#4E342E]/20 shadow-2xl z-40 transform translate-x-full transition-transform duration-300 ease-out p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+            <div class="space-y-6">
+                <!-- Header -->
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div>
+                        <h4 class="text-base font-serif font-bold text-[#4E342E] uppercase" id="drawer-order-id">Order Details</h4>
+                        <span class="text-[10px] text-slate-400 font-mono" id="drawer-order-date">July 2, 2026</span>
+                    </div>
+                    <button type="button" onclick="closeOrderDrawer()" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Customer Details block -->
+                <div class="space-y-2.5">
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer & Delivery Info</h5>
+                    <div class="p-4 bg-[#FAF4E8]/50 border border-[#D9A441]/25 rounded-2xl text-xs font-semibold text-slate-600 leading-normal space-y-1">
+                        <div class="flex items-center space-x-2 pb-1.5 border-b border-[#4E342E]/5">
+                            <div class="w-7 h-7 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-[10px] select-none" id="drawer-avatar">R</div>
+                            <div>
+                                <span class="block font-bold text-[#4E342E]" id="drawer-cust-name">Ramesh Mishra</span>
+                                <span class="block text-[9px] text-slate-400 font-mono" id="drawer-cust-mobile">+91 9876501101</span>
+                            </div>
+                        </div>
+                        <p class="pt-1.5 font-normal text-slate-500" id="drawer-cust-address">House 12, Rampur</p>
+                        <p class="text-[10px] text-slate-400 font-bold" id="drawer-cust-village-pin">Rampur - 250101</p>
+                    </div>
+                </div>
+
+                <!-- Dispatch Assignment Form -->
+                <div class="space-y-2.5">
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Operational Status & Dispatch</h5>
+                    <form id="drawer-dispatch-form" action="" method="POST" onsubmit="submitDrawerDispatch(event)" class="space-y-3.5 text-xs font-semibold">
+                        
+                        <!-- Status Update select -->
+                        <div class="space-y-1">
+                            <label for="drawer-status" class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Order Status</label>
+                            <select id="drawer-status" name="status" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-xl focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                                <option value="Pending">Pending</option>
+                                <option value="Preparing">Preparing</option>
+                                <option value="Packed">Packed</option>
+                                <option value="Out for Delivery">Out for Delivery</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+
+                        <!-- Delivery boy assign select -->
+                        <div class="space-y-1">
+                            <label for="drawer-delivery-boy" class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Assign Delivery Boy</label>
+                            <select id="drawer-delivery-boy" name="delivery_boy_id" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-xl focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                                <option value="">Unassigned / Store Pickup</option>
+                                {% for db in delivery_boys %}
+                                <option value="{{ db.id }}">{{ db.name }} (Status: {{ db.status }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold rounded-xl shadow-sm transition-all text-xs">
+                            Update Order Details
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Products Summary Table -->
+                <div class="space-y-2.5">
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Items summary</h5>
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-[#4E342E] space-y-2" id="drawer-items-list">
+                        <!-- Items inject -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Invoice & Track actions -->
+            <div class="border-t border-slate-100 pt-4 flex gap-3 text-xs font-bold">
+                <a id="drawer-invoice-link" href="#" target="_blank" class="flex-grow py-2.5 bg-[#FAF4E8] text-[#C96A2B] border border-[#C96A2B]/40 hover:bg-[#C96A2B]/5 rounded-xl transition-all uppercase tracking-widest text-[10px] flex items-center justify-center space-x-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Print Invoice</span>
+                </a>
+                
+                <button type="button" onclick="closeOrderDrawer()" class="flex-grow py-2.5 bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+                    Close Drawer
+                </button>
+            </div>
+        </div>
 
         <!-- Tab 2: Inventory CRUD Manager -->
         <section id="tab-inventory" class="hidden space-y-6">
@@ -995,7 +1203,7 @@
     let activeAdminTab = "overview";
     function switchAdminTab(tabId) {
         // Clear all views
-        ["overview", "inventory", "ledger", "deliveries", "analytics", "ai", "reports", "settings", "whatsapp", "audit", "users"].forEach(tab => {
+        ["overview", "orders", "inventory", "ledger", "deliveries", "analytics", "ai", "reports", "settings", "whatsapp", "audit", "users"].forEach(tab => {
             const el = document.getElementById(`tab-${tab}`);
             if (el) el.classList.add('hidden');
             
@@ -1263,6 +1471,148 @@
     
     function mockAction(msg) {
         alert(`Namaste! ${msg}`);
+    }
+
+    // Order Drawer handlers
+    function openOrderDrawer(btn) {
+        const row = btn.closest('tr');
+        const id = row.dataset.id;
+        const name = row.dataset.name;
+        const mobile = row.dataset.mobile;
+        const address = row.dataset.address;
+        const village = row.dataset.village;
+        const pincode = row.dataset.pincode;
+        const items = row.dataset.items;
+        const total = row.dataset.total;
+        const pay = row.dataset.pay;
+        const status = row.dataset.status;
+        const dbId = row.dataset.deliveryBoyId;
+        const date = row.dataset.date;
+        
+        // Populate fields
+        document.getElementById('drawer-order-id').textContent = `Order #${id}`;
+        document.getElementById('drawer-order-date').textContent = date;
+        document.getElementById('drawer-cust-name').textContent = name;
+        document.getElementById('drawer-cust-mobile').textContent = `+91 ${mobile}`;
+        document.getElementById('drawer-cust-address').textContent = address;
+        document.getElementById('drawer-cust-village-pin').textContent = `${village} - ${pincode}`;
+        document.getElementById('drawer-avatar').textContent = name[0].toUpperCase();
+        
+        // Populate inputs
+        document.getElementById('drawer-status').value = status;
+        document.getElementById('drawer-delivery-boy').value = dbId || "";
+        
+        // Populate items list
+        const list = document.getElementById('drawer-items-list');
+        list.innerHTML = "";
+        const parts = items.split(', ');
+        parts.forEach(part => {
+            const rowItem = document.createElement('div');
+            rowItem.className = "flex justify-between items-baseline py-1 border-b border-[#4E342E]/5 last:border-0";
+            rowItem.innerHTML = `<span class="font-bold text-[#4E342E]">${part}</span>`;
+            list.appendChild(rowItem);
+        });
+        
+        // Invoice link
+        document.getElementById('drawer-invoice-link').href = `/order/${id}/invoice`;
+        
+        // Set form action
+        document.getElementById('drawer-dispatch-form').action = `/admin/update_delivery/${id}`;
+        
+        // Slide in
+        const drawer = document.getElementById('order-detail-drawer');
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+        
+        lucide.createIcons();
+    }
+    
+    function closeOrderDrawer() {
+        const drawer = document.getElementById('order-detail-drawer');
+        drawer.classList.remove('translate-x-0');
+        drawer.classList.add('translate-x-full');
+    }
+
+    // Submit dispatch updates via AJAX
+    function submitDrawerDispatch(event) {
+        event.preventDefault();
+        const form = event.target;
+        const action = form.action;
+        const formData = new FormData(form);
+        
+        fetch(action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // Success! Close drawer and update table row in-place
+                const urlParts = action.split('/');
+                const orderId = urlParts[urlParts.length - 1];
+                const row = document.querySelector(`tr[data-id="${orderId}"]`);
+                
+                if (row) {
+                    const nextStatus = document.getElementById('drawer-status').value;
+                    const nextDbId = document.getElementById('drawer-delivery-boy').value;
+                    
+                    // Update dataset
+                    row.dataset.status = nextStatus;
+                    row.dataset.deliveryBoyId = nextDbId;
+                    
+                    // Update status badge in the row
+                    const badgeCell = row.querySelector('td:nth-child(6)');
+                    if (badgeCell) {
+                        let bgClass = "bg-blue-50 text-blue-700 border border-blue-100";
+                        if (nextStatus === "Delivered") {
+                            bgClass = "bg-emerald-50 text-emerald-700 border border-emerald-100";
+                        } else if (nextStatus === "Cancelled") {
+                            bgClass = "bg-rose-50 text-rose-700 border border-rose-100";
+                        } else if (nextStatus === "Out for Delivery") {
+                            bgClass = "bg-indigo-50 text-indigo-700 border border-indigo-100 animate-pulse";
+                        }
+                        badgeCell.innerHTML = `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${bgClass}">${nextStatus}</span>`;
+                    }
+                }
+                
+                closeOrderDrawer();
+                alert(`Order updated successfully!`);
+            } else {
+                alert("Failed to update order status.");
+            }
+        })
+        .catch(error => {
+            alert("Network connection error. Failed to update order status.");
+        });
+    }
+
+    // Advanced search & filters logic
+    function filterOrdersTable() {
+        const query = document.getElementById('order-search-inp').value.toLowerCase().trim();
+        const filterStatus = document.getElementById('order-filter-status').value;
+        const filterPay = document.getElementById('order-filter-pay').value;
+        
+        document.querySelectorAll('#orders-admin-table .order-row').forEach(row => {
+            const id = row.dataset.id.toLowerCase();
+            const name = row.dataset.name.toLowerCase();
+            const mobile = row.dataset.mobile.toLowerCase();
+            const items = row.dataset.items.toLowerCase();
+            
+            const status = row.dataset.status;
+            const pay = row.dataset.pay;
+            
+            // Match text
+            const matchesQuery = query === "" || id.includes(query) || name.includes(query) || mobile.includes(query) || items.includes(query);
+            
+            // Match dropdowns
+            const matchesStatus = filterStatus === "All" || status === filterStatus;
+            const matchesPay = filterPay === "All" || pay === filterPay;
+            
+            if (matchesQuery && matchesStatus && matchesPay) {
+                row.classList.remove('hidden');
+            } else {
+                row.classList.add('hidden');
+            }
+        });
     }
 </script>
 {% endblock %}
