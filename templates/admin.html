@@ -43,7 +43,19 @@
                 <button onclick="switchAdminTab('analytics')" id="nav-analytics" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
                     <span class="flex items-center space-x-2">
                         <i data-lucide="trending-up" class="w-4 h-4"></i>
-                        <span>P&L & AI Forecast</span>
+                        <span>P&L Analytics</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('ai')" id="nav-ai" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="brain-circuit" class="w-4 h-4"></i>
+                        <span>AI Insights</span>
+                    </span>
+                </button>
+                <button onclick="switchAdminTab('reports')" id="nav-reports" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>Business Reports</span>
                     </span>
                 </button>
                 <button onclick="switchAdminTab('settings')" id="nav-settings" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200">
@@ -87,6 +99,57 @@
 
     <!-- Right Column: Sub-views Panel -->
     <div class="lg:col-span-3 space-y-6">
+        
+        <!-- Top Navbar -->
+        <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
+            <div class="paper-texture"></div>
+            
+            <!-- Left: Search bar -->
+            <div class="relative w-full sm:max-w-xs">
+                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/10 rounded-xl px-3.5 py-2 focus-within:bg-white focus-within:border-[#C65D2E]">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
+                    <input type="text" placeholder="Search orders, products, khata..." class="w-full bg-transparent border-none text-xs text-[#4E342E] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0" oninput="mockSearch(this.value)">
+                </div>
+            </div>
+
+            <!-- Right: Widgets, Date, Profile -->
+            <div class="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto text-xs font-semibold">
+                
+                <!-- Date -->
+                <div class="hidden sm:flex items-center space-x-1.5 text-slate-500 bg-orange-50/30 px-3 py-1.5 rounded-xl border border-orange-100/50 text-[10px] font-bold uppercase">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#C65D2E]"></i>
+                    <span id="nav-date">July 2, 2026</span>
+                </div>
+
+                <!-- Notifications dropdown -->
+                <div class="relative">
+                    <button onclick="toggleNavDropdown('nav-notif-box')" class="p-2 bg-slate-50 border border-slate-100 hover:bg-slate-100 text-[#4E342E] rounded-xl relative transition-all">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border border-white"></span>
+                    </button>
+                    <!-- Notifications Dropdown Box -->
+                    <div id="nav-notif-box" class="hidden absolute right-0 mt-2 w-64 bg-white border border-[#4E342E]/10 rounded-xl shadow-xl p-3.5 z-30 text-[10px] space-y-2.5">
+                        <span class="font-bold text-[#4E342E] uppercase block border-b pb-1.5">Notifications</span>
+                        <div class="space-y-2 text-slate-500 font-normal leading-normal">
+                            <p class="flex items-start gap-1"><span class="text-[#2E7D32] shrink-0">✔</span><span>New order #1005 placed successfully by Ramesh Mishra.</span></p>
+                            <p class="flex items-start gap-1"><span class="text-amber-500 shrink-0">⚠</span><span>Low Stock Alert: Amul Cow Ghee has only 8 units left.</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile avatar display -->
+                <div class="flex items-center space-x-2.5 pl-2 border-l border-slate-100">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#C65D2E] to-[#E5A93B] flex items-center justify-center border border-white shadow-sm font-bold text-white text-xs select-none">
+                        {{ current_user.name[0] | uppercase }}
+                    </div>
+                    <div class="hidden sm:block text-left leading-tight">
+                        <span class="block font-bold text-xs text-[#4E342E]">{{ current_user.name }}</span>
+                        <span class="block text-[9px] text-slate-400 font-mono">@{{ current_user.username }}</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
         
         <!-- Tab 1: Overview & Sales Charts -->
         <section id="tab-overview" class="space-y-6">
@@ -439,6 +502,114 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 10: AI Business Insights -->
+        <section id="tab-ai" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-[#4E342E]">AI Business Insights & Demand Forecasts</h3>
+                    <p class="text-xs text-slate-400">Predictive intelligence analysis for stock velocity, demand forecasting, and smart promotional bundle offers.</p>
+                </div>
+                
+                <button type="button" onclick="mockAction('AI forecasting algorithms synchronized with recent transactions.')" class="px-4 py-2 bg-[#C96A2B] hover:bg-[#B3581E] text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center space-x-1.5 shrink-0">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <span>Recalculate Models</span>
+                </button>
+            </div>
+
+            <!-- Top AI Stats widgets -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs font-semibold text-[#4E342E]">
+                <div class="p-4 bg-orange-50/20 border border-orange-100 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400">
+                        <span>Expected Weekend Sales</span>
+                        <span class="text-[#2E7D32] font-bold">+18.5% ▲</span>
+                    </div>
+                    <h4 class="text-xl font-extrabold">₹34,500</h4>
+                    <p class="text-[10px] text-slate-400 font-normal leading-normal">Weekend high demand forecast due to local village festival and wedding season dates.</p>
+                </div>
+
+                <div class="p-4 bg-orange-50/20 border border-orange-100 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400">
+                        <span>Fast Moving category</span>
+                        <span class="text-[#2E7D32] font-bold">Staples</span>
+                    </div>
+                    <h4 class="text-xl font-extrabold">Atta & Ghee</h4>
+                    <p class="text-[10px] text-slate-400 font-normal leading-normal">High depletion rates. Restock 15 units of Ghee immediately to prevent out-of-stock losses.</p>
+                </div>
+
+                <div class="p-4 bg-orange-50/20 border border-orange-100 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400">
+                        <span>Suggested Offer Bundle</span>
+                        <span class="text-[#C96A2B] font-bold">12% Boost</span>
+                    </div>
+                    <h4 class="text-xl font-extrabold">Tea + Biscuits</h4>
+                    <p class="text-[10px] text-slate-400 font-normal leading-normal">Bundle 'Premium Tea 250g' with 'Marie Biscuits' at 5% discount to push slow-moving cookies stock.</p>
+                </div>
+            </div>
+
+            <!-- AI Charts grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-4">
+                    <h4 class="text-xs font-bold text-[#4E342E] uppercase tracking-wider">Predictive Revenue Demand (₹)</h4>
+                    <div class="h-64 relative">
+                        <canvas id="predictiveRevenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-4">
+                    <h4 class="text-xs font-bold text-[#4E342E] uppercase tracking-wider">Product Velocity Index (Sales/Day)</h4>
+                    <div class="h-64 relative">
+                        <canvas id="productVelocityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 11: Reports Export -->
+        <section id="tab-reports" class="hidden space-y-6">
+            <div>
+                <h3 class="text-base font-bold text-[#4E342E]">Business Reports Generator</h3>
+                <p class="text-xs text-slate-400">Generate and export transaction summaries, inventory audits, and ledger dues statistics.</p>
+            </div>
+
+            <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-6 shadow-sm space-y-5">
+                <h4 class="text-xs font-bold text-[#4E342E] border-b border-[#4E342E]/5 pb-3">Export File Parameters</h4>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs font-semibold">
+                    <div class="space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Report Category</label>
+                        <select id="report-type" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-xl focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                            <option value="sales">Sales & Revenue Registry</option>
+                            <option value="inventory">Inventory Catalog & Stock</option>
+                            <option value="ledger">Khata Ledger Balance Sheet</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Start Date</label>
+                        <input type="date" id="report-start" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-xl focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">End Date</label>
+                        <input type="date" id="report-end" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-xl focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3 pt-3 border-t border-slate-50">
+                    <button onclick="downloadMockReport('PDF')" class="px-5 py-2.5 bg-[#4E342E] hover:bg-[#C65D2E] text-[#FAF4E8] font-bold rounded-xl transition-all shadow-md flex items-center space-x-1.5">
+                        <i data-lucide="file-down" class="w-4 h-4"></i>
+                        <span>Export PDF</span>
+                    </button>
+                    <button onclick="downloadMockReport('Excel')" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition-all shadow-md flex items-center space-x-1.5">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        <span>Export Excel (.xlsx)</span>
+                    </button>
+                    <button onclick="downloadMockReport('CSV')" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-750 text-white font-bold rounded-xl transition-all shadow-md flex items-center space-x-1.5">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>Export CSV</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -824,7 +995,7 @@
     let activeAdminTab = "overview";
     function switchAdminTab(tabId) {
         // Clear all views
-        ["overview", "inventory", "ledger", "deliveries", "analytics", "settings", "whatsapp", "audit", "users"].forEach(tab => {
+        ["overview", "inventory", "ledger", "deliveries", "analytics", "ai", "reports", "settings", "whatsapp", "audit", "users"].forEach(tab => {
             const el = document.getElementById(`tab-${tab}`);
             if (el) el.classList.add('hidden');
             
@@ -995,6 +1166,103 @@
                 }
             }
         });
+
+        // Date initialization
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+        document.getElementById('nav-date').textContent = new Date().toLocaleDateString('en-US', options);
+
+        // Chart 3: AI Predictive Revenue Demand
+        const ctxPredictive = document.getElementById('predictiveRevenueChart').getContext('2d');
+        new Chart(ctxPredictive, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4 (AI Forecast)', 'Week 5 (AI Forecast)'],
+                datasets: [
+                    {
+                        label: 'Actual Revenue (₹)',
+                        data: [15000, 18500, 21000, null, null],
+                        borderColor: '#C65D2E',
+                        backgroundColor: 'rgba(198, 93, 46, 0.05)',
+                        borderWidth: 2.5,
+                        fill: false,
+                        tension: 0.35,
+                        pointRadius: 3
+                    },
+                    {
+                        label: 'Projected Demand (₹)',
+                        data: [15000, 18500, 21000, 24500, 28000],
+                        borderColor: '#D9A441',
+                        backgroundColor: 'rgba(217, 164, 65, 0.05)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.35,
+                        pointRadius: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, labels: { font: { size: 9, family: 'Plus Jakarta Sans' } } }
+                },
+                scales: {
+                    y: { grid: { color: 'rgba(78, 52, 46, 0.05)' }, ticks: { font: { size: 9 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                }
+            }
+        });
+
+        // Chart 4: AI Product Velocity Index
+        const ctxVelocity = document.getElementById('productVelocityChart').getContext('2d');
+        new Chart(ctxVelocity, {
+            type: 'bar',
+            data: {
+                labels: ['Wheat Flour', 'Ghee', 'Rice', 'Spices', 'Tea', 'Dairy'],
+                datasets: [{
+                    label: 'Units Sold / Day',
+                    data: [42, 35, 28, 22, 19, 15],
+                    backgroundColor: [
+                        'rgba(198, 93, 46, 0.75)',
+                        'rgba(217, 164, 65, 0.75)',
+                        'rgba(46, 125, 50, 0.75)',
+                        'rgba(59, 130, 246, 0.75)',
+                        'rgba(168, 85, 247, 0.75)',
+                        'rgba(236, 72, 153, 0.75)'
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(78, 52, 46, 0.05)' }, ticks: { font: { size: 9 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                }
+            }
+        });
     });
+
+    // Helper functions
+    function toggleNavDropdown(boxId) {
+        const el = document.getElementById(boxId);
+        if (el) el.classList.toggle('hidden');
+    }
+    
+    function mockSearch(query) {
+        console.log(`Searching catalog for: ${query}`);
+    }
+    
+    function downloadMockReport(format) {
+        const type = document.getElementById('report-type').value;
+        alert(`Namaste! Generating ${type.toUpperCase()} analytics report in ${format} format. Your download will start automatically.`);
+    }
+    
+    function mockAction(msg) {
+        alert(`Namaste! ${msg}`);
+    }
 </script>
 {% endblock %}
