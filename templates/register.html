@@ -4,48 +4,56 @@
 
 {% block content %}
 <style>
-    /* Premium Page Keyframes & Utilities */
+    /* Premium Page Animations & Keyframes */
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(24px); }
+        from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
     @keyframes float {
         0%, 100% { transform: translateY(0) scale(1); }
-        50% { transform: translateY(-6px) scale(1.02); }
+        50% { transform: translateY(-5px) scale(1.01); }
     }
     @keyframes floatSlow {
         0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-16px) rotate(8deg); }
+        50% { transform: translateY(-12px) rotate(6deg); }
     }
     @keyframes floatSlower {
         0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(18px) rotate(-12deg); }
+        50% { transform: translateY(15px) rotate(-10deg); }
     }
-    @keyframes pulseSoft {
-        0%, 100% { opacity: 0.15; }
-        50% { opacity: 0.35; }
+    
+    /* SVG Checkmark draw-in keyframes */
+    @keyframes stroke {
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes scale {
+        0%, 100% { transform: none; }
+        50% { transform: scale3d(1.1, 1.1, 1); }
+    }
+    @keyframes fill {
+        to { box-shadow: inset 0 0 0 35px #2e7d32; }
     }
 
     .animate-fade-in {
-        animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .animate-float {
-        animation: float 5s ease-in-out infinite;
+        animation: float 4s ease-in-out infinite;
     }
     .floating-decor-1 {
-        animation: floatSlow 10s ease-in-out infinite;
+        animation: floatSlow 8s ease-in-out infinite;
     }
     .floating-decor-2 {
-        animation: floatSlower 14s ease-in-out infinite;
+        animation: floatSlower 12s ease-in-out infinite;
     }
     
     /* Paper Plaster Texture overlay */
     .paper-texture {
         position: absolute;
         inset: 0;
-        opacity: 0.045;
+        opacity: 0.04;
         pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
 
     /* Focus & Sliding Focus Glow states */
@@ -54,7 +62,7 @@
     }
     .input-group-wrapper:focus-within {
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(199, 106, 43, 0.08);
+        box-shadow: 0 6px 20px rgba(199, 106, 43, 0.08);
     }
 
     /* CTA Button Ripple effects */
@@ -67,18 +75,55 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 140px;
-        height: 140px;
-        background: rgba(255, 255, 255, 0.25);
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.2);
         border-radius: 50%;
         transform: translate(-50%, -50%) scale(0);
         opacity: 0;
-        transition: transform 0.6s, opacity 1s;
+        transition: transform 0.5s, opacity 0.8s;
     }
     .btn-ripple:active::after {
         transform: translate(-50%, -50%) scale(4);
         opacity: 1;
         transition: 0s;
+    }
+
+    /* Multi-step track transition (Framer Motion emulation) */
+    #wizard-track {
+        display: flex;
+        width: 200%;
+        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Success Checkmark visual styles */
+    .checkmark {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #2e7d32;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0 0 0 #2e7d32;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s forwards;
+    }
+    .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #2e7d32;
+        fill: none;
+        animation: stroke .6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        stroke: #fff;
+        fill: none;
+        animation: stroke .3s cubic-bezier(0.65, 0, 0.45, 1) .8s forwards;
     }
 
     /* Responsive Mobile Sticky Controls */
@@ -108,8 +153,6 @@
     <div class="absolute top-24 right-[12%] text-4xl opacity-15 select-none pointer-events-none floating-decor-2">🌶️</div>
     <div class="absolute bottom-20 left-[8%] text-4xl opacity-15 select-none pointer-events-none floating-decor-2">🪔</div>
     <div class="absolute bottom-16 right-[10%] text-5xl opacity-15 select-none pointer-events-none floating-decor-1">🍃</div>
-    <div class="absolute top-1/2 left-[5%] text-3xl opacity-10 select-none pointer-events-none floating-decor-2">🌰</div>
-    <div class="absolute top-1/3 right-[6%] text-4xl opacity-10 select-none pointer-events-none floating-decor-1">🌾</div>
 
     <!-- Centered Premium Registration Card -->
     <div class="w-full max-w-[520px] bg-white border border-[#D9A441]/35 rounded-[24px] shadow-[0_24px_50px_rgba(78,52,46,0.12)] p-8 md:p-10 relative overflow-hidden animate-fade-in z-10 form-container">
@@ -121,171 +164,221 @@
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C96A2B] to-[#D9A441]"></div>
 
         <!-- Header Section with Circular Logo -->
-        <div class="text-center space-y-4 mb-8">
+        <div class="text-center space-y-4 mb-6" id="register-header-block">
             <div class="flex justify-center">
                 <div class="relative">
-                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#C96A2B] to-[#D9A441] flex items-center justify-center border-2 border-[#FAF4E8] shadow-lg shadow-orange-950/20 animate-float">
-                        <i data-lucide="sparkles" class="w-10 h-10 text-[#FAF4E8] animate-pulse"></i>
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#C96A2B] to-[#D9A441] flex items-center justify-center border-2 border-[#FAF4E8] shadow-md shadow-orange-950/20 animate-float">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-[#FAF4E8] animate-pulse"></i>
                     </div>
                     <!-- Halo border ring -->
-                    <div class="absolute -inset-1.5 rounded-full border border-[#D9A441]/30 animate-spin [animation-duration:16s] pointer-events-none"></div>
+                    <div class="absolute -inset-1 rounded-full border border-[#D9A441]/30 animate-spin [animation-duration:16s] pointer-events-none"></div>
                 </div>
             </div>
             
-            <div class="space-y-2">
-                <h3 class="text-2xl md:text-3xl font-serif font-bold text-[#4A2F2A] tracking-wide">Create Your Account</h3>
-                <p class="text-xs text-[#4A2F2A]/70 max-w-sm mx-auto leading-relaxed">
-                    Join the trusted digital family of Pramod General Store and enjoy seamless grocery shopping.
+            <div class="space-y-1">
+                <h3 class="text-2xl font-serif font-bold text-[#4A2F2A] tracking-wide">Create Your Account</h3>
+                <p class="text-[11px] text-[#4A2F2A]/70 max-w-sm mx-auto leading-relaxed">
+                    Join the trusted digital family of Pramod General Store.
                 </p>
             </div>
         </div>
 
-        <!-- Registration Form -->
-        <form action="/register" method="POST" class="space-y-5 text-xs font-semibold" novalidate>
-            
-            <!-- Full Name input -->
-            <div class="space-y-1.5 relative">
-                <label for="name" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Full Name</label>
-                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
-                    <i data-lucide="user" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
-                    <input type="text" id="name" name="name" required placeholder="Pramod Kumar" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
-                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
-                </div>
-                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+        <!-- Step Indicator -->
+        <div class="flex items-center justify-center space-x-3 mb-8" id="step-indicator">
+            <div class="flex items-center space-x-1.5">
+                <span class="w-6 h-6 rounded-full bg-[#C96A2B] text-[#FAF4E8] text-[10px] font-extrabold flex items-center justify-center transition-all duration-300" id="step-1-badge">1</span>
+                <span class="text-[10px] uppercase font-extrabold tracking-wider text-[#4A2F2A]">Details</span>
             </div>
+            <div class="w-10 h-[2px] bg-slate-200 transition-all duration-300" id="step-line"></div>
+            <div class="flex items-center space-x-1.5">
+                <span class="w-6 h-6 rounded-full bg-slate-200 text-[#4A2F2A]/60 text-[10px] font-extrabold flex items-center justify-center transition-all duration-300" id="step-2-badge">2</span>
+                <span class="text-[10px] uppercase font-extrabold tracking-wider text-[#4A2F2A]/40 transition-all duration-300" id="step-2-label">Security</span>
+            </div>
+        </div>
 
-            <!-- Mobile Number input -->
-            <div class="space-y-1.5 relative">
-                <label for="mobile" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Mobile Number</label>
-                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
-                    <i data-lucide="phone" class="w-4 h-4 text-[#4A2F2A]/40 mr-2 shrink-0"></i>
-                    <span class="text-sm font-bold text-[#4A2F2A]/60 mr-2 border-r border-[#4A2F2A]/15 pr-2 select-none">+91</span>
-                    <input type="tel" id="mobile" name="mobile" required placeholder="9876501101" inputmode="numeric" pattern="[0-9]{10}" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
-                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
-                </div>
-                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
-                
-                <!-- Mock OTP Send Trigger Link -->
-                <div id="otp-trigger-container" class="hidden mt-2">
-                    <button type="button" id="send-otp-btn" class="text-[10px] font-bold text-[#C96A2B] hover:text-[#B3581E] flex items-center space-x-1 transition-all">
-                        <span>Verify via Mobile OTP?</span>
-                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </button>
-                </div>
+        <!-- Error Alert Banner -->
+        <div id="error-alert" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-3.5 rounded-xl text-xs font-bold flex items-center justify-between mb-4 animate-fade-in">
+            <span id="error-alert-msg">Registration error</span>
+            <button type="button" onclick="document.getElementById('error-alert').classList.add('hidden')" class="text-rose-400 hover:text-rose-600">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
 
-                <!-- OTP Input collapsing drawer -->
-                <div id="otp-drawer" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-0 space-y-2 mt-2 bg-[#FAF4E8]/40 p-3 rounded-xl border border-[#D9A441]/25">
-                    <p class="text-[10px] text-[#4A2F2A]/70 font-medium">
-                        Simulating verification code dispatch. Use code <strong class="text-[#C96A2B]">1234</strong> to verify:
-                    </p>
-                    <div class="flex items-center space-x-2">
-                        <div class="relative flex-grow">
-                            <input type="text" id="otp-code" maxlength="4" placeholder="4-Digit Code" class="w-full px-3 py-2 bg-white border border-[#4A2F2A]/15 rounded-lg text-xs tracking-widest text-center font-bold focus:outline-none focus:border-[#C96A2B] text-[#4A2F2A]">
+        <!-- Multi-step Form Wizard Container -->
+        <div id="register-form-block" class="overflow-hidden">
+            <form action="/register" method="POST" class="text-xs font-semibold" novalidate>
+                <div id="wizard-track">
+                    
+                    <!-- STEP 1 PANEL -->
+                    <div class="w-1/2 shrink-0 pr-2 space-y-5" id="step-1-pane">
+                        <!-- Full Name input -->
+                        <div class="space-y-1.5 relative">
+                            <label for="name" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Full Name</label>
+                            <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                                <i data-lucide="user" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                                <input type="text" id="name" name="name" required placeholder="Pramod Kumar" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                                <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                            </div>
+                            <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
                         </div>
-                        <button type="button" id="verify-otp-btn" class="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-lg transition-all shadow-md">
-                            Verify
-                        </button>
+
+                        <!-- Mobile Number input -->
+                        <div class="space-y-1.5 relative">
+                            <label for="mobile" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Mobile Number</label>
+                            <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                                <i data-lucide="phone" class="w-4 h-4 text-[#4A2F2A]/40 mr-2 shrink-0"></i>
+                                <span class="text-sm font-bold text-[#4A2F2A]/60 mr-2 border-r border-[#4A2F2A]/15 pr-2 select-none">+91</span>
+                                <input type="tel" id="mobile" name="mobile" required placeholder="9876501101" inputmode="numeric" pattern="[0-9]{10}" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                                <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                            </div>
+                            <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+                            
+                            <!-- OTP Verification trigger link -->
+                            <div id="otp-trigger-container" class="hidden mt-2">
+                                <button type="button" id="send-otp-btn" class="text-[10px] font-bold text-[#C96A2B] hover:text-[#B3581E] flex items-center space-x-1 transition-all">
+                                    <span>Verify Mobile via OTP</span>
+                                    <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+
+                            <!-- OTP collapsible drawer -->
+                            <div id="otp-drawer" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-0 space-y-2 mt-2 bg-[#FAF4E8]/40 p-3 rounded-xl border border-[#D9A441]/25">
+                                <p class="text-[10px] text-[#4A2F2A]/70 font-medium">
+                                    Simulating OTP dispatch. Enter code <strong class="text-[#C96A2B]">1234</strong> to verify:
+                                </p>
+                                <div class="flex items-center space-x-2">
+                                    <div class="relative flex-grow">
+                                        <input type="text" id="otp-code" maxlength="4" placeholder="4-Digit Code" class="w-full px-3 py-2 bg-white border border-[#4A2F2A]/15 rounded-lg text-xs tracking-widest text-center font-bold focus:outline-none focus:border-[#C96A2B] text-[#4A2F2A]">
+                                    </div>
+                                    <button type="button" id="verify-otp-btn" class="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-lg transition-all shadow-md">
+                                        Verify
+                                    </button>
+                                </div>
+                                <div id="otp-feedback" class="text-[10px] font-bold text-center"></div>
+                            </div>
+                        </div>
+
+                        <!-- Step 1 Navigation (Next Step) -->
+                        <div class="mobile-sticky-footer pt-4">
+                            <button type="button" id="next-step-btn" disabled class="w-full py-4 bg-slate-200 text-slate-400 font-extrabold rounded-xl transition-all duration-300 uppercase tracking-widest text-xs flex items-center justify-center space-x-2 cursor-not-allowed">
+                                <span>Continue to Security</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div id="otp-feedback" class="text-[10px] font-bold text-center"></div>
-                </div>
-            </div>
 
-            <!-- Username input -->
-            <div class="space-y-1.5 relative">
-                <label for="username" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Username</label>
-                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
-                    <i data-lucide="at-sign" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
-                    <input type="text" id="username" name="username" required placeholder="ramesh_ji" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
-                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
-                </div>
-                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
-            </div>
+                    <!-- STEP 2 PANEL -->
+                    <div class="w-1/2 shrink-0 pl-2 space-y-5" id="step-2-pane">
+                        <!-- Username input -->
+                        <div class="space-y-1.5 relative">
+                            <label for="username" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Username</label>
+                            <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                                <i data-lucide="at-sign" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                                <input type="text" id="username" name="username" required placeholder="ramesh_ji" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                                <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                            </div>
+                            <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+                        </div>
 
-            <!-- Password input -->
-            <div class="space-y-1.5 relative">
-                <label for="password" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Password</label>
-                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
-                    <i data-lucide="lock" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
-                    <input type="password" id="password" name="password" required placeholder="Choose a strong password" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
-                    <button type="button" onclick="togglePasswordVisibility('password', 'password-toggle-icon')" class="text-[#4A2F2A]/40 hover:text-[#4A2F2A]/70 focus:outline-none ml-2 shrink-0">
-                        <i data-lucide="eye" id="password-toggle-icon" class="w-4 h-4"></i>
-                    </button>
-                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
-                </div>
-                
-                <!-- Live Password Strength Meter -->
-                <div class="mt-2 space-y-1">
-                    <div class="flex justify-between items-center text-[10px]">
-                        <span class="font-bold text-[#4A2F2A]/60">Password Strength</span>
-                        <span id="strength-label" class="font-extrabold text-[#4A2F2A]/40">None</span>
+                        <!-- Password input -->
+                        <div class="space-y-1.5 relative">
+                            <label for="password" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Password</label>
+                            <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                                <i data-lucide="lock" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                                <input type="password" id="password" name="password" required placeholder="Choose a strong password" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                                <button type="button" onclick="togglePasswordVisibility('password', 'password-toggle-icon')" class="text-[#4A2F2A]/40 hover:text-[#4A2F2A]/70 focus:outline-none ml-2 shrink-0">
+                                    <i data-lucide="eye" id="password-toggle-icon" class="w-4 h-4"></i>
+                                </button>
+                                <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                            </div>
+                            
+                            <!-- Live Password Strength Meter -->
+                            <div class="mt-2 space-y-1">
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span class="font-bold text-[#4A2F2A]/60">Password Strength</span>
+                                    <span id="strength-label" class="font-extrabold text-[#4A2F2A]/40">None</span>
+                                </div>
+                                <div class="grid grid-cols-4 gap-1.5 h-1">
+                                    <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                                    <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                                    <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                                    <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
+                                </div>
+                            </div>
+                            <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+                        </div>
+
+                        <!-- Confirm Password input -->
+                        <div class="space-y-1.5 relative">
+                            <label for="confirm_password" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Confirm Password</label>
+                            <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Verify your password" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                                <button type="button" onclick="togglePasswordVisibility('confirm_password', 'confirm-password-toggle-icon')" class="text-[#4A2F2A]/40 hover:text-[#4A2F2A]/70 focus:outline-none ml-2 shrink-0">
+                                    <i data-lucide="eye" id="confirm-password-toggle-icon" class="w-4 h-4"></i>
+                                </button>
+                                <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                            </div>
+                            <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+                        </div>
+
+                        <!-- Step 2 Navigation (Submit & Back Buttons) -->
+                        <div class="mobile-sticky-footer pt-4 space-y-3">
+                            <button type="submit" id="submit-btn" class="w-full py-4 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs btn-ripple flex items-center justify-center space-x-2">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                <span>Create Account</span>
+                            </button>
+                            
+                            <button type="button" id="prev-step-btn" class="w-full py-3 bg-[#FAF4E8] border border-[#4A2F2A]/10 hover:bg-[#4A2F2A]/5 text-[#4A2F2A]/70 font-extrabold rounded-xl transition-all uppercase tracking-widest text-[10px] flex items-center justify-center space-x-1">
+                                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                                <span>Back to Details</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-4 gap-1.5 h-1">
-                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
-                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
-                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
-                        <div class="strength-bar-seg bg-slate-200 rounded-full transition-colors duration-300"></div>
-                    </div>
                 </div>
-                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+            </form>
+            
+            <!-- Redirect back to login link -->
+            <div class="border-t border-[#4A2F2A]/10 mt-8 pt-5 text-center text-xs">
+                <span class="text-[#4A2F2A]/60 font-medium">Already have an account? </span>
+                <a href="/login" class="text-[#C96A2B] font-extrabold hover:underline inline-flex items-center space-x-1">
+                    <span>Log In</span>
+                    <i data-lucide="arrow-right-left" class="w-3.5 h-3.5 ml-0.5"></i>
+                </a>
             </div>
+        </div>
 
-            <!-- Confirm Password input -->
-            <div class="space-y-1.5 relative">
-                <label for="confirm_password" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Confirm Password</label>
-                <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
-                    <i data-lucide="shield-check" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
-                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Verify your password" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
-                    <button type="button" onclick="togglePasswordVisibility('confirm_password', 'confirm-password-toggle-icon')" class="text-[#4A2F2A]/40 hover:text-[#4A2F2A]/70 focus:outline-none ml-2 shrink-0">
-                        <i data-lucide="eye" id="confirm-password-toggle-icon" class="w-4 h-4"></i>
-                    </button>
-                    <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
-                </div>
-                <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+        <!-- Success Screen View -->
+        <div id="register-success-block" class="hidden opacity-0 scale-95 transition-all duration-500 ease-out text-center py-6 space-y-6">
+            <!-- Animated Green SVG Checkmark -->
+            <svg class="checkmark mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            
+            <div class="space-y-2">
+                <h3 class="text-2xl font-serif font-bold text-[#4A2F2A]">Namaste, Registration Successful!</h3>
+                <p class="text-xs text-[#4A2F2A]/70 max-w-sm mx-auto leading-relaxed">
+                    Welcome to the digital family of Pramod General Store. Your personal bahi khata ledger and shopping cart are ready.
+                </p>
             </div>
-
-            <!-- CTA Submit Button Wrapper -->
-            <div class="mobile-sticky-footer pt-3">
-                <button type="submit" class="w-full py-4 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs btn-ripple flex items-center justify-center space-x-2">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i>
-                    <span>Create Account</span>
-                </button>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+                <a href="/" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.03] active:scale-[0.97] transition-all shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs btn-ripple flex items-center justify-center space-x-1.5">
+                    <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                    <span>Start Shopping</span>
+                </a>
+                <a href="/login" class="w-full sm:w-auto px-6 py-3.5 bg-[#FAF4E8] border border-[#C96A2B]/40 text-[#C96A2B] font-extrabold rounded-xl hover:scale-[1.03] hover:bg-[#C96A2B]/5 active:scale-[0.97] transition-all uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>Go to Login</span>
+                </a>
             </div>
-        </form>
-
-        <!-- Login Redirect Option -->
-        <div class="border-t border-[#4A2F2A]/10 mt-8 pt-5 text-center text-xs">
-            <span class="text-[#4A2F2A]/60 font-medium">Already have an account? </span>
-            <a href="/login" class="text-[#C96A2B] font-extrabold hover:underline inline-flex items-center space-x-1">
-                <span>Log In</span>
-                <i data-lucide="arrow-right-left" class="w-3.5 h-3.5 ml-0.5"></i>
-            </a>
         </div>
 
         <!-- Heritage Branding Footer -->
         <div class="flex items-center justify-center space-x-1.5 mt-8 text-[10px] font-extrabold tracking-widest uppercase text-[#4A2F2A]/40 pointer-events-none select-none">
             <i data-lucide="leaf" class="w-3.5 h-3.5 text-[#2E7D32]"></i>
             <span>Trusted Since Generations</span>
-        </div>
-    </div>
-</div>
-
-<!-- Fullscreen success processing overlay -->
-<div id="success-overlay" class="fixed inset-0 bg-[#4A2F2A]/90 backdrop-blur-md z-50 flex flex-col items-center justify-center text-center hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white border border-[#D9A441]/40 rounded-3xl p-8 max-w-sm mx-4 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300" id="success-card">
-        <div class="paper-texture"></div>
-        <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#C96A2B] to-[#D9A441]"></div>
-        
-        <div class="w-20 h-20 bg-[#2E7D32]/10 border border-[#2E7D32]/25 rounded-full flex items-center justify-center mx-auto mb-4 text-[#2E7D32] animate-bounce">
-            <i data-lucide="check-circle" class="w-12 h-12"></i>
-        </div>
-        
-        <h3 class="text-2xl font-serif font-bold text-[#4A2F2A] mb-2">Account Created!</h3>
-        <p class="text-sm text-[#4A2F2A]/80 mb-6 leading-relaxed">
-            Welcome to the digital family of Pramod General Store. Preparing your personal ledger and shopping bahi...
-        </p>
-        
-        <div class="w-full bg-[#FAF4E8] h-1.5 rounded-full overflow-hidden">
-            <div class="bg-[#C96A2B] h-full rounded-full transition-all duration-[1.5s] ease-out w-0" id="success-progress"></div>
         </div>
     </div>
 </div>
@@ -314,6 +407,13 @@
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirm_password');
         
+        // Navigation Buttons
+        const nextStepBtn = document.getElementById('next-step-btn');
+        const prevStepBtn = document.getElementById('prev-step-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorAlert = document.getElementById('error-alert');
+        const errorAlertMsg = document.getElementById('error-alert-msg');
+        
         // OTP references
         const otpTriggerContainer = document.getElementById('otp-trigger-container');
         const sendOtpBtn = document.getElementById('send-otp-btn');
@@ -322,12 +422,8 @@
         const otpCodeInput = document.getElementById('otp-code');
         const otpFeedback = document.getElementById('otp-feedback');
         
-        // Success Overlay references
-        const successOverlay = document.getElementById('success-overlay');
-        const successCard = document.getElementById('success-card');
-        const successProgress = document.getElementById('success-progress');
-        
         let isMobileVerified = false;
+        let activeStep = 1;
 
         // Reusable state rendering helper
         function setInputState(inputEl, isValid, errorText = "") {
@@ -347,7 +443,6 @@
                 parent.classList.remove('border-[#4A2F2A]/15', 'border-rose-500');
                 parent.classList.add('border-emerald-500');
                 badge.classList.remove('opacity-0');
-                // Avoid overwriting sandbox verified badge
                 if (!isMobileVerified || inputEl !== mobileInput) {
                     badge.innerHTML = '<i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32]"></i>';
                     badge.className = "validation-badge ml-2 opacity-100 transition-opacity duration-200 shrink-0";
@@ -372,6 +467,7 @@
             const val = nameInput.value.trim();
             const isValid = val.length >= 3;
             setInputState(nameInput, isValid, "Full name must be at least 3 letters.");
+            checkStep1Unlock();
             return isValid;
         }
         nameInput.addEventListener('input', validateName);
@@ -379,7 +475,6 @@
         // Live validation logic for Mobile
         function validateMobile() {
             const val = mobileInput.value.replace(/\D/g, '');
-            // Limit characters strictly to numeric 10-digits
             mobileInput.value = val.substring(0, 10);
             
             const isValid = mobileInput.value.length === 10;
@@ -390,9 +485,24 @@
             } else {
                 otpTriggerContainer.classList.add('hidden');
             }
+            checkStep1Unlock();
             return isValid;
         }
         mobileInput.addEventListener('input', validateMobile);
+
+        // Unlock Step 1 Next button only when name is valid AND mobile is verified
+        function checkStep1Unlock() {
+            const nameValid = nameInput.value.trim().length >= 3;
+            const mobileValid = mobileInput.value.replace(/\D/g, '').length === 10;
+            
+            if (nameValid && mobileValid && isMobileVerified) {
+                nextStepBtn.removeAttribute('disabled');
+                nextStepBtn.className = "w-full py-4 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs flex items-center justify-center space-x-2 cursor-pointer btn-ripple";
+            } else {
+                nextStepBtn.setAttribute('disabled', 'true');
+                nextStepBtn.className = "w-full py-4 bg-slate-200 text-slate-400 font-extrabold rounded-xl transition-all duration-300 uppercase tracking-widest text-xs flex items-center justify-center space-x-2 cursor-not-allowed";
+            }
+        }
 
         // Simulated OTP Verification Trigger
         sendOtpBtn.addEventListener('click', () => {
@@ -407,7 +517,7 @@
         verifyOtpBtn.addEventListener('click', () => {
             if (otpCodeInput.value === '1234') {
                 isMobileVerified = true;
-                otpFeedback.textContent = "✓ OTP Code Verified Successfully!";
+                otpFeedback.textContent = "✓ OTP Verified Successfully!";
                 otpFeedback.className = "text-[10px] font-bold text-center text-[#2E7D32] animate-bounce";
                 
                 setTimeout(() => {
@@ -415,18 +525,59 @@
                     otpDrawer.classList.add('opacity-0');
                     otpTriggerContainer.classList.add('hidden');
                     
-                    // Style the mobile field as explicitly verified
+                    // Style the mobile field as verified
                     const parent = mobileInput.closest('.input-group-wrapper');
                     const badge = parent.querySelector('.validation-badge');
                     badge.innerHTML = '<i data-lucide="shield-check" class="w-4 h-4 text-[#2E7D32]"></i> <span class="text-[9px] font-extrabold text-[#2E7D32] uppercase tracking-wider mr-1">Verified</span>';
                     badge.className = "validation-badge ml-2 flex items-center bg-[#2E7D32]/10 border border-[#2E7D32]/25 px-2 py-0.5 rounded-full select-none shrink-0";
-                    mobileInput.setAttribute('disabled', 'true');
+                    mobileInput.setAttribute('readonly', 'true'); // Make field readonly
                     lucide.createIcons();
+                    checkStep1Unlock();
                 }, 1200);
             } else {
                 otpFeedback.textContent = "✗ Incorrect OTP! Use sandbox code 1234.";
                 otpFeedback.className = "text-[10px] font-bold text-center text-rose-500 animate-pulse";
             }
+        });
+
+        // Wizard Slider controller
+        function goToStep(stepNum) {
+            const track = document.getElementById('wizard-track');
+            const step1Badge = document.getElementById('step-1-badge');
+            const step2Badge = document.getElementById('step-2-badge');
+            const step2Label = document.getElementById('step-2-label');
+            const stepLine = document.getElementById('step-line');
+            
+            if (stepNum === 1) {
+                track.style.transform = 'translateX(0%)';
+                step1Badge.innerHTML = '1';
+                step1Badge.className = "w-6 h-6 rounded-full bg-[#C96A2B] text-[#FAF4E8] text-[10px] font-extrabold flex items-center justify-center transition-all duration-300";
+                
+                step2Badge.className = "w-6 h-6 rounded-full bg-slate-200 text-[#4A2F2A]/60 text-[10px] font-extrabold flex items-center justify-center transition-all duration-300";
+                step2Label.className = "text-[10px] uppercase font-bold text-[#4A2F2A]/40 transition-all duration-300";
+                stepLine.className = "w-10 h-[2px] bg-slate-200 transition-all duration-300";
+                activeStep = 1;
+            } else if (stepNum === 2) {
+                track.style.transform = 'translateX(-50%)';
+                step1Badge.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>';
+                step1Badge.className = "w-6 h-6 rounded-full bg-[#2E7D32] text-white text-[10px] font-extrabold flex items-center justify-center transition-all duration-300";
+                
+                step2Badge.className = "w-6 h-6 rounded-full bg-[#C96A2B] text-[#FAF4E8] text-[10px] font-extrabold flex items-center justify-center transition-all duration-300";
+                step2Label.className = "text-[10px] uppercase font-bold text-[#4A2F2A] transition-all duration-300";
+                stepLine.className = "w-10 h-[2px] bg-[#C96A2B] transition-all duration-300";
+                activeStep = 2;
+                lucide.createIcons();
+            }
+        }
+
+        nextStepBtn.addEventListener('click', () => {
+            if (validateName() && validateMobile() && isMobileVerified) {
+                goToStep(2);
+            }
+        });
+
+        prevStepBtn.addEventListener('click', () => {
+            goToStep(1);
         });
 
         // Live validation logic for Username
@@ -488,7 +639,6 @@
                 strengthBarSegs[3].className = 'strength-bar-seg bg-emerald-500 rounded-full transition-colors duration-300';
             }
             
-            // Re-validate confirm password if it contains values
             if (confirmPasswordInput.value.length > 0) {
                 validateConfirmPassword();
             }
@@ -504,7 +654,32 @@
         }
         confirmPasswordInput.addEventListener('input', validateConfirmPassword);
 
-        // Submit listener with premium success screen workflow
+        // Show detailed success screen block
+        function showSuccessView() {
+            // Hide registration form items and indicators
+            document.getElementById('register-form-block').classList.add('hidden');
+            document.getElementById('register-header-block').classList.add('hidden');
+            document.getElementById('step-indicator').classList.add('hidden');
+            errorAlert.classList.add('hidden');
+            
+            // Show checkmark view and apply spring animations
+            const successView = document.getElementById('register-success-block');
+            successView.classList.remove('hidden');
+            setTimeout(() => {
+                successView.classList.remove('opacity-0', 'scale-95');
+                successView.classList.add('opacity-100', 'scale-100');
+                lucide.createIcons();
+            }, 50);
+        }
+
+        // Show submission errors
+        function showErrorAlert(msg) {
+            errorAlertMsg.textContent = msg;
+            errorAlert.classList.remove('hidden');
+            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Submit via AJAX Fetch
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
@@ -514,35 +689,71 @@
             const isPassVal = validatePassword();
             const isConfirmVal = validateConfirmPassword();
             
-            if (!isNameVal || !isMobileVal || !isUserVal || !isPassVal || !isConfirmVal) {
-                // Focus on the first field with errors
-                if (!isNameVal) nameInput.focus();
-                else if (!isMobileVal) mobileInput.focus();
-                else if (!isUserVal) usernameInput.focus();
+            if (!isNameVal || !isMobileVal) {
+                goToStep(1);
+                return;
+            }
+            
+            if (!isUserVal || !isPassVal || !isConfirmVal) {
+                if (!isUserVal) usernameInput.focus();
                 else if (!isPassVal) passwordInput.focus();
                 else if (!isConfirmVal) confirmPasswordInput.focus();
                 return;
             }
-            
-            // Re-enable mobile input in case it was disabled during OTP verification so Flask form parses it
-            mobileInput.removeAttribute('disabled');
-            
-            // Show Success Overlay Modal
-            successOverlay.classList.remove('hidden');
-            setTimeout(() => {
-                successOverlay.classList.remove('opacity-0');
-                successCard.classList.remove('scale-95');
-            }, 50);
-            
-            // Fill progress bar animation
-            setTimeout(() => {
-                successProgress.style.width = '100%';
-            }, 100);
-            
-            // Submit form to backend after transition completes
-            setTimeout(() => {
-                form.submit();
-            }, 1600);
+
+            // Show loading animation on button
+            submitBtn.setAttribute('disabled', 'true');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Processing...</span>
+            `;
+
+            // Build request params
+            const formData = new URLSearchParams();
+            formData.append('name', nameInput.value.trim());
+            formData.append('mobile', mobileInput.value.replace(/\D/g, ''));
+            formData.append('username', usernameInput.value.trim());
+            formData.append('password', passwordInput.value);
+            formData.append('role', 'Customer');
+
+            // Send registration post call
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString()
+            })
+            .then(response => {
+                // SUCCESS: Redirected to login page
+                if (response.redirected && response.url.includes('/login')) {
+                    showSuccessView();
+                } else {
+                    // FAILED: Parse response HTML for error messages
+                    return response.text().then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const flashSpan = doc.querySelector('#flash-message span');
+                        const errorMsg = flashSpan ? flashSpan.textContent : "Username already exists. Please choose a different one.";
+                        showErrorAlert(errorMsg);
+                        
+                        // Restore button
+                        submitBtn.removeAttribute('disabled');
+                        submitBtn.innerHTML = originalHTML;
+                        lucide.createIcons();
+                    });
+                }
+            })
+            .catch(error => {
+                showErrorAlert("Connection error. Please check your network and try again.");
+                submitBtn.removeAttribute('disabled');
+                submitBtn.innerHTML = originalHTML;
+                lucide.createIcons();
+            });
         });
     });
 </script>
