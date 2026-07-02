@@ -80,6 +80,10 @@
                 <i data-lucide="contact" class="w-4 h-4"></i>
                 <span>Employee Directory</span>
             </button>
+            <button onclick="switchManagerTab('logistics')" id="btn-tab-logistics" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50">
+                <i data-lucide="truck" class="w-4 h-4"></i>
+                <span>Logistics & Delivery</span>
+            </button>
             <button onclick="switchManagerTab('reports')" id="btn-tab-reports" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50">
                 <i data-lucide="file-chart-column" class="w-4 h-4"></i>
                 <span>Stock Reports</span>
@@ -914,6 +918,263 @@
             </div>
         </div>
 
+        <!-- TAB SECTION 8: LOGISTICS MANAGEMENT -->
+        <section id="pane-tab-logistics" class="hidden space-y-6 tab-pane">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">Logistics & Route Dispatch Management</h3>
+                    <p class="text-xs text-slate-400">Optimize vehicle paths, monitor delivery partner shifts, and track client dispatches.</p>
+                </div>
+                
+                <button type="button" onclick="mockAction('Route optimization AI models executed.')" class="px-4 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center space-x-1 shrink-0">
+                    <i data-lucide="route" class="w-4 h-4"></i>
+                    <span>Optimize Routes</span>
+                </button>
+            </div>
+
+            <!-- Top Logistics KPIs -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-semibold text-slate-500">
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-blue-50 rounded-xl"><i data-lucide="truck" class="w-5 h-5 text-[#2563EB]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-slate-800 block">45</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Total Deliveries</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-emerald-50 rounded-xl"><i data-lucide="check-circle-2" class="w-5 h-5 text-[#16A34A]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#16A34A] block">38</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Delivered Today</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-orange-50 rounded-xl"><i data-lucide="clock" class="w-5 h-5 text-[#F97316]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#F97316] block">7</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Pending Dispatch</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-yellow-50 rounded-xl"><i data-lucide="bike" class="w-5 h-5 text-amber-500"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-slate-800 block">4 Active</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Logistics Partners</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Mock Delivery Maps Container -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-50 pb-3">
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Live Route Map Tracking</h4>
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#16A34A] text-[9px] font-bold uppercase animate-pulse">GPS Stream Online</span>
+                </div>
+                
+                <!-- Mock Map visual -->
+                <div class="w-full bg-slate-100 rounded-2xl border border-slate-200 relative overflow-hidden h-72 flex items-center justify-center">
+                    <!-- Clean grid layout indicating map -->
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#2563EB_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                    <!-- Mock road paths lines -->
+                    <div class="absolute w-4/5 h-0.5 bg-[#2563EB]/15 transform rotate-[25deg]"></div>
+                    <div class="absolute w-3/5 h-0.5 bg-[#2563EB]/15 transform -rotate-[45deg]"></div>
+                    <div class="absolute w-full h-0.5 bg-[#2563EB]/10 top-1/3"></div>
+                    <div class="absolute w-full h-0.5 bg-[#2563EB]/10 bottom-1/4"></div>
+
+                    <!-- Warehouse Marker -->
+                    <div class="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                        <div class="p-2 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] text-white rounded-full shadow-lg border-2 border-white scale-110">
+                            <i data-lucide="warehouse" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-[8px] font-bold text-slate-700 bg-white border border-slate-100 px-1.5 py-0.5 rounded mt-1 shadow-sm font-semibold">RetailIQ Hub</span>
+                    </div>
+
+                    <!-- Active Delivery Bike Marker -->
+                    <div class="absolute top-1/3 right-1/3 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center animate-bounce">
+                        <div class="p-2 bg-[#F97316] text-white rounded-full shadow-lg border-2 border-white">
+                            <i data-lucide="bike" class="w-3.5 h-3.5"></i>
+                        </div>
+                        <span class="text-[8px] font-bold text-[#F97316] bg-white border border-slate-100 px-1.5 py-0.5 rounded mt-1 shadow-sm font-mono font-semibold">D-01 (ETA: 8 Min)</span>
+                    </div>
+
+                    <!-- Customer Destination Marker -->
+                    <div class="absolute bottom-1/4 right-1/4 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                        <div class="p-2 bg-[#16A34A] text-white rounded-full shadow-lg border-2 border-white">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                        </div>
+                        <span class="text-[8px] font-bold text-slate-500 bg-white border border-slate-100 px-1.5 py-0.5 rounded mt-1 shadow-sm font-semibold">Customer #1003</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery table list -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs font-semibold" id="delivery-admin-table">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                            <th class="px-4 py-3">Order ID</th>
+                            <th class="px-4 py-3">Destination Address</th>
+                            <th class="px-4 py-3">Assigned Partner</th>
+                            <th class="px-4 py-3">Distance / Duration</th>
+                            <th class="px-4 py-3">Delivery Status</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="log-row hover:bg-slate-50/50 border-b border-slate-100 text-slate-600"
+                            data-order-id="#1003"
+                            data-address="Mishra Tola Ward No. 5, Rampur"
+                            data-partner="Ramesh Kumar (Bike)"
+                            data-distance="2.4 Km"
+                            data-duration="12 Min"
+                            data-status="Out For Delivery"
+                            data-customer="Shyam Sundar"
+                            data-otp="4921">
+                            <td class="px-4 py-3 font-bold text-slate-800">#1003</td>
+                            <td class="px-4 py-3 text-slate-500">Mishra Tola Ward No. 5, Rampur</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[10px] font-bold">R</div>
+                                    <span>Ramesh Kumar</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 font-mono">2.4 Km / 12 Min</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[9px] font-bold uppercase animate-pulse">Out For Delivery</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <button type="button" onclick="openLogisticsDrawer(this)" class="px-2.5 py-1.5 bg-[#2563EB]/5 hover:bg-[#2563EB]/15 text-[#2563EB] font-bold rounded-lg text-[10px] transition-all">
+                                    Track Live
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr class="log-row hover:bg-slate-50/50 border-b border-slate-100 text-slate-600"
+                            data-order-id="#1004"
+                            data-address="Station Road, Near Temple, Rampur"
+                            data-partner="Vikram Singh (E-Rickshaw)"
+                            data-distance="4.2 Km"
+                            data-duration="18 Min"
+                            data-status="Assigned"
+                            data-customer="Anita Sharma"
+                            data-otp="8210">
+                            <td class="px-4 py-3 font-bold text-slate-800">#1004</td>
+                            <td class="px-4 py-3 text-slate-500">Station Road, Near Temple, Rampur</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[10px] font-bold">V</div>
+                                    <span>Vikram Singh</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-slate-500 font-mono">4.2 Km / 18 Min</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[9px] font-bold uppercase">Assigned</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <button type="button" onclick="openLogisticsDrawer(this)" class="px-2.5 py-1.5 bg-[#2563EB]/5 hover:bg-[#2563EB]/15 text-[#2563EB] font-bold rounded-lg text-[10px] transition-all">
+                                    Track Live
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Logistics Track Details Drawer (Slide-In) -->
+        <div id="logistics-detail-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-slate-200 shadow-2xl z-40 transform translate-x-full transition-transform duration-300 ease-out p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+            <div class="space-y-6">
+                <!-- Header -->
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div>
+                        <h4 class="text-base font-extrabold text-slate-800" id="log-drawer-order">Order #1003</h4>
+                        <span class="text-[9px] text-slate-400 font-mono">Real-Time Dispatch Logistics</span>
+                    </div>
+                    <button type="button" onclick="closeLogisticsDrawer()" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Destination Summary Card -->
+                <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-semibold text-slate-600 space-y-2.5">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Customer:</span>
+                        <span class="font-bold text-slate-800" id="log-drawer-customer">Shyam Sundar</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Delivery Address:</span>
+                        <span class="font-bold text-slate-800 text-right leading-tight" id="log-drawer-address">Mishra Tola Ward No. 5</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Assigned Rider:</span>
+                        <span class="font-bold text-[#2563EB]" id="log-drawer-partner">Ramesh Kumar</span>
+                    </div>
+                </div>
+
+                <!-- AI suggested route optimization index details -->
+                <div class="space-y-2.5">
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">AI Route Optimization</h5>
+                    <div class="p-4 bg-blue-50/20 border border-blue-100 rounded-2xl space-y-2.5 text-xs font-semibold">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Shortest Route Distance:</span>
+                            <span class="text-slate-800" id="log-drawer-distance">2.4 Km</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Estimated Transit ETA:</span>
+                            <span class="text-slate-800 font-bold" id="log-drawer-duration">12 Min</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Traffic Density Alert:</span>
+                            <span class="text-emerald-700 font-bold">Clear (Green Zone)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive animated timeline -->
+                <div class="space-y-2.5">
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivery Timeline</h5>
+                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-4 text-[11px] font-semibold text-slate-500">
+                        <div class="flex items-center space-x-3 text-[#16A34A]">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
+                            <span>Order Packed & Sealed</span>
+                        </div>
+                        <div class="flex items-center space-x-3 text-[#16A34A]">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
+                            <span>Rider Assigned & Dispatched</span>
+                        </div>
+                        <div class="flex items-center space-x-3 text-[#2563EB] animate-pulse">
+                            <i data-lucide="bike" class="w-4 h-4 shrink-0"></i>
+                            <span>Rider Out for Delivery</span>
+                        </div>
+                        <div class="flex items-center space-x-3 text-slate-400">
+                            <i data-lucide="circle" class="w-4 h-4 shrink-0"></i>
+                            <span>Delivered (Pending OTP Verification)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proof of Delivery OTP verification -->
+                <div class="space-y-2.5">
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proof of Delivery OTP</h5>
+                    <div class="p-4 bg-orange-50/20 border border-orange-100 rounded-2xl flex justify-between items-center text-xs font-semibold">
+                        <div>
+                            <span class="block text-[8px] text-slate-400 uppercase">Verification OTP Code</span>
+                            <span class="text-sm font-mono font-extrabold text-slate-800" id="log-drawer-otp">4921</span>
+                        </div>
+                        <span class="px-2.5 py-1 bg-[#F97316] text-white rounded font-bold text-[9px] uppercase tracking-wider">Verify Secure OTP</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer close actions -->
+            <div class="border-t border-slate-100 pt-4 flex gap-3 text-xs font-bold">
+                <button type="button" onclick="closeLogisticsDrawer()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+                    Close Drawer
+                </button>
+            </div>
+        </div>
+
         <!-- TAB SECTION 5: STOCK REPORTS -->
         <section id="pane-tab-reports" class="hidden space-y-6 tab-pane">
             <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
@@ -1281,6 +1542,38 @@
                 row.classList.add('hidden');
             }
         });
+    }
+
+    // Logistics Drawer controllers
+    function openLogisticsDrawer(btn) {
+        const row = btn.closest('tr');
+        const orderId = row.dataset.orderId;
+        const customer = row.dataset.customer;
+        const address = row.dataset.address;
+        const partner = row.dataset.partner;
+        const distance = row.dataset.distance;
+        const duration = row.dataset.duration;
+        const otp = row.dataset.otp;
+        
+        document.getElementById('log-drawer-order').textContent = `Order ${orderId}`;
+        document.getElementById('log-drawer-customer').textContent = customer;
+        document.getElementById('log-drawer-address').textContent = address;
+        document.getElementById('log-drawer-partner').textContent = partner;
+        document.getElementById('log-drawer-distance').textContent = distance;
+        document.getElementById('log-drawer-duration').textContent = duration;
+        document.getElementById('log-drawer-otp').textContent = otp;
+        
+        const drawer = document.getElementById('logistics-detail-drawer');
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+        
+        lucide.createIcons();
+    }
+
+    function closeLogisticsDrawer() {
+        const drawer = document.getElementById('logistics-detail-drawer');
+        drawer.classList.remove('translate-x-0');
+        drawer.classList.add('translate-x-full');
     }
 </script>
 {% endblock %}
