@@ -445,20 +445,25 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        user = next((u for u in users_db if u['username'] == username and u['password'] == password), None)
-        if user:
-            session['username'] = user['username']
-            log_audit("User Login", f"Logged in successfully as {user['role']} ({user['name']})")
-            flash(f"Welcome back, {user['name']}!", "success")
-            
-            if user['role'] in ["Owner", "Clerk"]:
-                return redirect(url_for('admin'))
-            elif user['role'] == "Delivery Boy":
-                return redirect(url_for('delivery_dashboard'))
+        # Check if username matches username or mobile
+        matched_user = next((u for u in users_db if u['username'] == username or u['mobile'] == username), None)
+        
+        if matched_user:
+            if matched_user['password'] == password:
+                session['username'] = matched_user['username']
+                log_audit("User Login", f"Logged in successfully as {matched_user['role']} ({matched_user['name']})")
+                flash(f"Welcome back, {matched_user['name']}!", "success")
+                
+                if matched_user['role'] in ["Owner", "Clerk"]:
+                    return redirect(url_for('admin'))
+                elif matched_user['role'] == "Delivery Boy":
+                    return redirect(url_for('delivery_dashboard'))
+                else:
+                    return redirect(url_for('index'))
             else:
-                return redirect(url_for('index'))
+                flash("Incorrect Password!", "error")
         else:
-            flash("Invalid username or password! Please try again.", "error")
+            flash("Username or Mobile not found!", "error")
             
     return render_template('login.html')
 

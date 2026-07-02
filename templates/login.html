@@ -1,39 +1,505 @@
 {% extends 'base.html' %}
 
-{% block title %}Log In - Pramod General Store{% endblock %}
+{% block title %}Sign In - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto my-12 bg-[#F5E6CA]/60 border-2 border-[#4E342E]/20 rounded-2xl p-8 shadow-xl relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C65D2E] to-[#E5A93B]"></div>
+<style>
+    /* Premium Page Animations & Keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-5px) scale(1.02); }
+    }
+    @keyframes floatSlow {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-16px) rotate(8deg); }
+    }
+    @keyframes floatSlower {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(18px) rotate(-12deg); }
+    }
     
-    <div class="text-center space-y-2 mb-8">
-        <div class="inline-flex h-12 w-12 rounded-full bg-[#C65D2E] border border-[#E5A93B] items-center justify-center text-white text-xl shadow-md">
-            🔑
+    /* SVG Checkmark draw-in keyframes */
+    @keyframes stroke {
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes scale {
+        0%, 100% { transform: none; }
+        50% { transform: scale3d(1.1, 1.1, 1); }
+    }
+    @keyframes fill {
+        to { box-shadow: inset 0 0 0 35px #2e7d32; }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .animate-float {
+        animation: float 4s ease-in-out infinite;
+    }
+    .floating-decor-1 {
+        animation: floatSlow 9s ease-in-out infinite;
+    }
+    .floating-decor-2 {
+        animation: floatSlower 13s ease-in-out infinite;
+    }
+    
+    /* Paper Plaster Texture overlay */
+    .paper-texture {
+        position: absolute;
+        inset: 0;
+        opacity: 0.045;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Focus & Sliding Focus Glow states */
+    .input-group-wrapper {
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .input-group-wrapper:focus-within {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(199, 106, 43, 0.08);
+    }
+
+    /* CTA Button Ripple effects */
+    .btn-ripple {
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-ripple::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        transition: transform 0.5s, opacity 0.8s;
+    }
+    .btn-ripple:active::after {
+        transform: translate(-50%, -50%) scale(4);
+        opacity: 1;
+        transition: 0s;
+    }
+
+    /* Success Checkmark visual styles */
+    .checkmark {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #2e7d32;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0 0 0 #2e7d32;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s forwards;
+    }
+    .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #2e7d32;
+        fill: none;
+        animation: stroke .6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        stroke: #fff;
+        fill: none;
+        animation: stroke .3s cubic-bezier(0.65, 0, 0.45, 1) .8s forwards;
+    }
+
+    /* Responsive Mobile Sticky Controls */
+    @media (max-width: 640px) {
+        .mobile-sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(250, 244, 232, 0.96);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            border-top: 1.5px solid rgba(217, 164, 65, 0.25);
+            box-shadow: 0 -8px 24px rgba(78, 52, 46, 0.12);
+            z-index: 40;
+        }
+        .form-container {
+            padding-bottom: 90px;
+        }
+    }
+</style>
+
+<div class="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    
+    <!-- Floating Village Heritage Backdrop Decorative items -->
+    <div class="absolute top-10 left-[12%] text-5xl opacity-15 select-none pointer-events-none floating-decor-1">🌾</div>
+    <div class="absolute top-24 right-[15%] text-4xl opacity-15 select-none pointer-events-none floating-decor-2">🌶️</div>
+    <div class="absolute bottom-20 left-[10%] text-4xl opacity-15 select-none pointer-events-none floating-decor-2">🪔</div>
+    <div class="absolute bottom-16 right-[12%] text-5xl opacity-15 select-none pointer-events-none floating-decor-1">🍃</div>
+
+    <!-- Centered Premium Registration Card -->
+    <div class="w-full max-w-[480px] bg-white border border-[#D9A441]/35 rounded-[24px] shadow-[0_24px_50px_rgba(78,52,46,0.12)] p-8 md:p-10 relative overflow-hidden animate-fade-in z-10 form-container">
+        
+        <!-- Paper Texture overlay for the heritage feeling -->
+        <div class="paper-texture"></div>
+        
+        <!-- Top Colored Border Accent -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C96A2B] to-[#D9A441]"></div>
+
+        <!-- Header Section with Circular Logo -->
+        <div class="text-center space-y-4 mb-6" id="login-header-block">
+            <div class="flex justify-center">
+                <div class="relative">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#C96A2B] to-[#D9A441] flex items-center justify-center border-2 border-[#FAF4E8] shadow-md shadow-orange-950/20 animate-float">
+                        <i data-lucide="key-round" class="w-8 h-8 text-[#FAF4E8] animate-pulse"></i>
+                    </div>
+                    <!-- Halo border ring -->
+                    <div class="absolute -inset-1 rounded-full border border-[#D9A441]/30 animate-spin [animation-duration:16s] pointer-events-none"></div>
+                </div>
+            </div>
+            
+            <div class="space-y-1">
+                <h3 class="text-2xl font-serif font-bold text-[#4A2F2A] tracking-wide">Welcome Back</h3>
+                <p class="text-[11px] text-[#4A2F2A]/70 max-w-sm mx-auto leading-relaxed">
+                    Sign in to continue shopping from Pramod General Store.
+                </p>
+            </div>
         </div>
-        <h3 class="text-xl font-serif font-bold text-[#4E342E] uppercase">Sign In to Your Account</h3>
-        <p class="text-xs text-slate-500 font-semibold">Access your personal bazar cart, order logs, or shop console.</p>
-    </div>
 
-    <form action="/login" method="POST" class="space-y-5 text-xs font-semibold">
-        <div>
-            <label for="username" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1.5">Username</label>
-            <input type="text" id="username" name="username" required placeholder="Enter your username" class="w-full px-4 py-3 bg-white border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700 text-xs">
-            <span class="block text-[9px] text-slate-400 mt-1">Hint: Try 'owner', 'clerk', 'delivery', or 'customer' (password: username + '123')</span>
+        <!-- Dynamic Error Alert Banner -->
+        <div id="error-alert" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-3.5 rounded-xl text-xs font-bold flex items-center justify-between mb-5 animate-fade-in">
+            <span id="error-alert-msg" class="flex items-center gap-1.5"></span>
+            <button type="button" onclick="document.getElementById('error-alert').classList.add('hidden')" class="text-rose-400 hover:text-rose-600 shrink-0">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
         </div>
 
-        <div>
-            <label for="password" class="block text-[10px] font-bold text-[#4E342E]/80 uppercase tracking-wider mb-1.5">Password</label>
-            <input type="password" id="password" name="password" required placeholder="Enter password" class="w-full px-4 py-3 bg-white border border-[#4E342E]/10 rounded-xl focus:outline-none focus:border-[#C65D2E] text-slate-700 text-xs">
+        <!-- Forgot Password Modal Alert (collapsible) -->
+        <div id="forgot-password-modal" class="hidden bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-xs font-semibold space-y-2 mb-5 animate-fade-in relative">
+            <button type="button" onclick="document.getElementById('forgot-password-modal').classList.add('hidden')" class="absolute top-2.5 right-2.5 text-amber-500 hover:text-amber-700">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <div class="flex items-start space-x-2">
+                <i data-lucide="info" class="w-4 h-4 text-amber-600 mt-0.5 shrink-0"></i>
+                <div class="space-y-1">
+                    <p class="font-bold">Family Credit Ledger Protection</p>
+                    <p class="font-normal text-[11px] text-[#4A2F2A]/80 leading-relaxed">
+                        For security and credit balance verification, accounts are managed directly by <strong>Pramod Ji (Owner)</strong>. Please contact him at the counter or call <strong>+91 98765 01100</strong> to recover/reset your password.
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-orange-950/20 uppercase tracking-wider text-xs">
-            Log In
-        </button>
-    </form>
+        <!-- Authenticating View Container -->
+        <div id="login-form-block" class="space-y-5">
+            <form action="/login" method="POST" class="space-y-5 text-xs font-semibold" novalidate>
+                
+                <!-- Username or Mobile input -->
+                <div class="space-y-1.5 relative">
+                    <label for="username" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Username or Mobile Number</label>
+                    <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                        <i data-lucide="user" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                        <input type="text" id="username" name="username" required placeholder="Enter username or mobile" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                        <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                    </div>
+                    <span class="block text-[10px] text-slate-400 mt-1 font-normal">Hint: 'owner', 'clerk', 'delivery', or 'customer' (password: user + '123')</span>
+                    <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+                </div>
 
-    <div class="border-t border-[#4E342E]/10 mt-6 pt-4 text-center text-xs">
-        <span class="text-slate-500">New customer? </span>
-        <a href="/register" class="text-[#C65D2E] font-bold hover:underline">Register Account</a>
+                <!-- Password input -->
+                <div class="space-y-1.5 relative">
+                    <div class="flex justify-between items-center">
+                        <label for="password" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Password</label>
+                        <button type="button" onclick="showForgotPasswordAlert()" class="text-[10px] font-bold text-[#C96A2B] hover:text-[#B3581E] hover:underline">Forgot Password?</button>
+                    </div>
+                    <div class="input-group-wrapper relative flex items-center bg-[#FAF4E8]/50 border border-[#4A2F2A]/15 rounded-xl px-4 py-3 focus-within:bg-white focus-within:border-[#C96A2B] focus-within:ring-2 focus-within:ring-[#C96A2B]/10">
+                        <i data-lucide="lock" class="w-4 h-4 text-[#4A2F2A]/40 mr-3 shrink-0"></i>
+                        <input type="password" id="password" name="password" required placeholder="Enter password" class="w-full bg-transparent border-none text-sm text-[#4A2F2A] placeholder-[#4A2F2A]/40 focus:outline-none focus:ring-0 p-0">
+                        <button type="button" onclick="togglePasswordVisibility('password', 'password-toggle-icon')" class="text-[#4A2F2A]/40 hover:text-[#4A2F2A]/70 focus:outline-none ml-2 shrink-0">
+                            <i data-lucide="eye" id="password-toggle-icon" class="w-4 h-4"></i>
+                        </button>
+                        <span class="validation-badge ml-2 opacity-0 transition-opacity duration-200"></span>
+                    </div>
+                    <div class="validation-msg text-[10px] text-rose-500 mt-1 hidden font-bold" aria-live="polite"></div>
+                </div>
+
+                <!-- Remember Me Checkbox -->
+                <div class="flex items-center justify-between pt-1">
+                    <label class="flex items-center space-x-2 cursor-pointer select-none">
+                        <input type="checkbox" id="remember_me" class="w-4 h-4 text-[#C96A2B] border-slate-300 rounded focus:ring-[#C96A2B] bg-[#FAF4E8]/50">
+                        <span class="text-xs text-[#4A2F2A]/70 font-semibold">Remember Me</span>
+                    </label>
+                </div>
+
+                <!-- CTA Submit Button Wrapper -->
+                <div class="mobile-sticky-footer pt-3">
+                    <button type="submit" id="submit-btn" class="w-full py-4 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs btn-ripple flex items-center justify-center space-x-2">
+                        <i data-lucide="log-in" class="w-4 h-4"></i>
+                        <span>Sign In</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- OR Separator Divider -->
+            <div class="flex items-center justify-center my-6 space-x-3 text-slate-300 select-none">
+                <div class="h-[1px] bg-slate-200 flex-grow"></div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">OR</span>
+                <div class="h-[1px] bg-slate-200 flex-grow"></div>
+            </div>
+
+            <!-- Guest Checkout CTA -->
+            <div class="w-full">
+                <a href="/" class="w-full py-3 bg-[#FAF4E8]/60 hover:bg-[#C96A2B]/5 border border-[#4A2F2A]/10 text-[#C96A2B] font-extrabold rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all uppercase tracking-widest text-[10px] flex items-center justify-center space-x-2">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
+                    <span>Continue as Guest</span>
+                </a>
+            </div>
+
+            <!-- Register Redirect Option -->
+            <div class="border-t border-[#4A2F2A]/10 mt-8 pt-5 text-center text-xs">
+                <span class="text-[#4A2F2A]/60 font-medium">Don't have an account? </span>
+                <a href="/register" class="text-[#C96A2B] font-extrabold hover:underline inline-flex items-center space-x-1">
+                    <span>Create Account</span>
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5 ml-0.5"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Success Screen View -->
+        <div id="login-success-block" class="hidden opacity-0 scale-95 transition-all duration-500 ease-out text-center py-6 space-y-6">
+            <!-- Animated Green SVG Checkmark -->
+            <svg class="checkmark mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            
+            <div class="space-y-2">
+                <h3 class="text-2xl font-serif font-bold text-[#4A2F2A]" id="success-welcome-title">Namaste, Welcome Back!</h3>
+                <p class="text-xs text-[#4A2F2A]/70 max-w-sm mx-auto leading-relaxed">
+                    Authentication successful. Redirecting you to your bazaar dashboard...
+                </p>
+            </div>
+        </div>
+
+        <!-- Heritage Branding Footer -->
+        <div class="flex items-center justify-center space-x-1.5 mt-8 text-[10px] font-extrabold tracking-widest uppercase text-[#4A2F2A]/40 pointer-events-none select-none">
+            <i data-lucide="leaf" class="w-3.5 h-3.5 text-[#2E7D32]"></i>
+            <span>Trusted Since Generations</span>
+        </div>
     </div>
 </div>
+
+<script>
+    // Visibility toggle for password
+    function togglePasswordVisibility(fieldId, iconId) {
+        const input = document.getElementById(fieldId);
+        const icon = document.getElementById(iconId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
+    // Toggle forgot password alert
+    function showForgotPasswordAlert() {
+        const modal = document.getElementById('forgot-password-modal');
+        modal.classList.remove('hidden');
+        modal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorAlert = document.getElementById('error-alert');
+        const errorAlertMsg = document.getElementById('error-alert-msg');
+        
+        // Success Overlay references
+        const successBlock = document.getElementById('login-success-block');
+        const loginFormBlock = document.getElementById('login-form-block');
+        const loginHeaderBlock = document.getElementById('login-header-block');
+
+        // Reusable state rendering helper
+        function setInputState(inputEl, isValid, errorText = "") {
+            const parent = inputEl.closest('.input-group-wrapper');
+            const badge = parent.querySelector('.validation-badge');
+            const msgEl = parent.parentElement.querySelector('.validation-msg');
+            
+            if (inputEl.value.trim() === "") {
+                parent.classList.remove('border-emerald-500', 'border-rose-500');
+                parent.classList.add('border-[#4A2F2A]/15');
+                badge.classList.add('opacity-0');
+                if (msgEl) msgEl.classList.add('hidden');
+                return;
+            }
+            
+            if (isValid) {
+                parent.classList.remove('border-[#4A2F2A]/15', 'border-rose-500');
+                parent.classList.add('border-emerald-500');
+                badge.classList.remove('opacity-0');
+                badge.innerHTML = '<i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32]"></i>';
+                badge.className = "validation-badge ml-2 opacity-100 transition-opacity duration-200 shrink-0";
+                if (msgEl) msgEl.classList.add('hidden');
+            } else {
+                parent.classList.remove('border-[#4A2F2A]/15', 'border-emerald-500');
+                parent.classList.add('border-rose-500');
+                badge.classList.remove('opacity-0');
+                badge.innerHTML = '<i data-lucide="alert-circle" class="w-4.5 h-4.5 text-rose-500"></i>';
+                badge.className = "validation-badge ml-2 opacity-100 transition-opacity duration-200 shrink-0";
+                if (msgEl && errorText) {
+                    msgEl.textContent = errorText;
+                    msgEl.classList.remove('hidden');
+                }
+            }
+            lucide.createIcons();
+        }
+
+        // Live validation
+        function validateUsername() {
+            const val = usernameInput.value.trim();
+            const isValid = val.length >= 3;
+            setInputState(usernameInput, isValid, "Please enter your username or 10-digit mobile number.");
+            return isValid;
+        }
+        usernameInput.addEventListener('input', validateUsername);
+
+        function validatePassword() {
+            const val = passwordInput.value;
+            const isValid = val.length >= 4;
+            setInputState(passwordInput, isValid, "Password must be at least 4 characters.");
+            return isValid;
+        }
+        passwordInput.addEventListener('input', validatePassword);
+
+        // Show detailed success screen block
+        function showSuccessView(name) {
+            // Hide registration form items and indicators
+            loginFormBlock.classList.add('hidden');
+            loginHeaderBlock.classList.add('hidden');
+            errorAlert.classList.add('hidden');
+            document.getElementById('forgot-password-modal').classList.add('hidden');
+            
+            if (name) {
+                document.getElementById('success-welcome-title').textContent = `Namaste, Welcome Back ${name}!`;
+            }
+            
+            // Show checkmark view and apply spring animations
+            successBlock.classList.remove('hidden');
+            setTimeout(() => {
+                successBlock.classList.remove('opacity-0', 'scale-95');
+                successBlock.classList.add('opacity-100', 'scale-100');
+                lucide.createIcons();
+            }, 50);
+        }
+
+        // Show submission errors
+        function showErrorAlert(msg, iconCode) {
+            errorAlertMsg.innerHTML = `<span class="mr-1.5">${iconCode}</span> <span>${msg}</span>`;
+            errorAlert.classList.remove('hidden');
+            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Submit via AJAX Fetch
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const isUserVal = validateUsername();
+            const isPassVal = validatePassword();
+            
+            if (!isUserVal || !isPassVal) {
+                if (!isUserVal) usernameInput.focus();
+                else if (!isPassVal) passwordInput.focus();
+                return;
+            }
+
+            // Show loading animation on button
+            submitBtn.setAttribute('disabled', 'true');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Verifying...</span>
+            `;
+
+            // Disable form input fields
+            usernameInput.setAttribute('disabled', 'true');
+            passwordInput.setAttribute('disabled', 'true');
+
+            // Build request params
+            const formData = new URLSearchParams();
+            formData.append('username', usernameInput.value.trim());
+            formData.append('password', passwordInput.value);
+
+            // Send login post call
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString()
+            })
+            .then(response => {
+                // SUCCESS: Redirected away from login page
+                if (response.redirected && !response.url.includes('/login')) {
+                    // Check if redirect has username / welcome
+                    showSuccessView("");
+                    setTimeout(() => {
+                        window.location.href = response.url;
+                    }, 1500);
+                } else {
+                    // FAILED: Parse response HTML for error messages
+                    return response.text().then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const flashSpan = doc.querySelector('#flash-message span');
+                        
+                        let errorMsg = "Invalid credentials. Please try again.";
+                        let iconCode = "⚠";
+                        
+                        if (flashSpan) {
+                            errorMsg = flashSpan.textContent;
+                            if (errorMsg.includes("Password")) {
+                                iconCode = "❌";
+                            }
+                        }
+                        
+                        showErrorAlert(errorMsg, iconCode);
+                        
+                        // Re-enable form fields
+                        usernameInput.removeAttribute('disabled');
+                        passwordInput.removeAttribute('disabled');
+                        submitBtn.removeAttribute('disabled');
+                        submitBtn.innerHTML = originalHTML;
+                        lucide.createIcons();
+                    });
+                }
+            })
+            .catch(error => {
+                showErrorAlert("Connection error. Please check your network and try again.", "⚠");
+                usernameInput.removeAttribute('disabled');
+                passwordInput.removeAttribute('disabled');
+                submitBtn.removeAttribute('disabled');
+                submitBtn.innerHTML = originalHTML;
+                lucide.createIcons();
+            });
+        });
+    });
+</script>
 {% endblock %}
