@@ -104,6 +104,18 @@
                         <span id="header-cart-badge" class="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </a>
                     
+                    {% if current_user and current_user.role == 'Customer' %}
+                    <a href="/dashboard" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center space-x-1.5
+                                {% if request.path == '/dashboard' %}
+                                  bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] border border-[#E5A93B]/30 shadow-md
+                                {% else %}
+                                  text-[#F5E6CA]/70 hover:text-white
+                                {% endif %}">
+                        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                        <span>My Account</span>
+                    </a>
+                    {% endif %}
+                    
                     {% if current_user %}
                         {% if current_user.role in ["Owner", "Clerk"] %}
                         <a href="/admin" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center space-x-1.5

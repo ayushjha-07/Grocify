@@ -1,0 +1,688 @@
+{% extends 'base.html' %}
+
+{% block title %}My Account Dashboard - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
+
+{% block content %}
+<style>
+    /* CSS Animations & Page Effects */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    /* Paper Texture overlay */
+    .paper-texture {
+        position: absolute;
+        inset: 0;
+        opacity: 0.04;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Tab navigation active class state */
+    .nav-btn-active {
+        background-color: rgba(199, 106, 43, 0.1) !important;
+        color: #C96A2B !important;
+        border-left-width: 4px;
+        border-color: #C96A2B;
+    }
+
+    /* Membership Progress Circle SVG styling */
+    .circle-progress-bg {
+        fill: none;
+        stroke: #FAF4E8;
+        stroke-width: 8;
+    }
+    .circle-progress-bar {
+        fill: none;
+        stroke: url(#goldGradient);
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-dasharray: 251.2;
+        stroke-dashoffset: 62.8; /* 75% complete example */
+        transition: stroke-dashoffset 1s ease-out;
+    }
+
+    /* Responsive Mobile Layout Navigation */
+    @media (max-width: 767px) {
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(250, 244, 232, 0.98);
+            backdrop-filter: blur(10px);
+            border-top: 1.5px solid rgba(217, 164, 65, 0.25);
+            box-shadow: 0 -8px 24px rgba(78, 52, 46, 0.12);
+            z-index: 40;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 12px;
+        }
+        .page-content-padding {
+            padding-bottom: 85px;
+        }
+    }
+</style>
+
+<!-- Notification Toast -->
+<div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-[#FAF4E8] border border-[#2E7D32]/25 text-[#2E7D32] p-4 rounded-xl shadow-lg font-bold text-xs flex items-center justify-between space-x-4 max-w-md w-full transition-all duration-300 translate-y-[-100px] opacity-0">
+    <span id="toast-msg">Cart updated!</span>
+    <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-600 shrink-0">
+        <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+</div>
+
+<!-- Main Split-Column Profile Dashboard Wrapper -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start page-content-padding animate-fade-in">
+    
+    <!-- LEFT SIDEBAR PANEL (25% on Desktop - Sticky Navigation) -->
+    <div class="col-span-1 md:col-span-3 bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+        <div class="paper-texture"></div>
+        
+        <!-- User Profile Avatar & Metadata block -->
+        <div class="flex flex-col items-center text-center space-y-3 pb-6 border-b border-slate-100">
+            <div class="relative">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#C96A2B] to-[#D9A441] flex items-center justify-center border-4 border-[#FAF4E8] shadow-md shadow-orange-950/20">
+                    <span class="text-3xl text-white font-serif font-extrabold select-none">{{ user.name[0] | uppercase }}</span>
+                </div>
+                <!-- Mini Edit Avatar badge -->
+                <button onclick="mockAction('Profile picture upload dialog open.')" class="absolute bottom-0 right-0 p-1.5 bg-[#4E342E] hover:bg-[#C96A2B] text-white rounded-full border border-white transition-all shadow-sm">
+                    <i data-lucide="camera" class="w-3 h-3"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-0.5">
+                <h3 class="text-sm font-bold text-[#4E342E] leading-snug">{{ user.name }}</h3>
+                <p class="text-[10px] font-mono text-slate-400">@{{ user.username }}</p>
+                <div class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-200 text-amber-800 text-[9px] font-extrabold uppercase mt-1">
+                    <i data-lucide="award" class="w-3 h-3"></i>
+                    <span>Gold Member</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar tab buttons navigation menu (collapses on Mobile) -->
+        <nav class="hidden md:block space-y-1.5 pt-6 text-xs font-bold text-[#4E342E]/80">
+            <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-orange-50/50 nav-btn-active">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Dashboard Overview</span>
+            </button>
+            <button onclick="switchTab('orders')" id="nav-btn-orders" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-orange-50/50">
+                <i data-lucide="history" class="w-4 h-4"></i>
+                <span>My Order History</span>
+            </button>
+            <button onclick="switchTab('wishlist')" id="nav-btn-wishlist" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-orange-50/50">
+                <i data-lucide="heart" class="w-4 h-4"></i>
+                <span>My Wishlist</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-btn-settings" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-orange-50/50">
+                <i data-lucide="user-cog" class="w-4 h-4"></i>
+                <span>Profile Settings</span>
+            </button>
+            <button onclick="switchTab('support')" id="nav-btn-support" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-orange-50/50">
+                <i data-lucide="help-circle" class="w-4 h-4"></i>
+                <span>Support Center</span>
+            </button>
+            <hr class="border-slate-100 my-2">
+            <a href="/logout" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 text-rose-500 hover:bg-rose-50">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- RIGHT MAIN CONTENT (75% on Desktop - Tabs Panels Switcher) -->
+    <div class="col-span-1 md:col-span-9 space-y-6">
+        
+        <!-- HEADER MODULE: Time-based Greeting & Date info -->
+        <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden">
+            <div class="paper-texture"></div>
+            <div>
+                <span class="text-[10px] font-bold text-[#D9A441] uppercase tracking-wider block" id="dashboard-time-greeting">Good Evening</span>
+                <h2 class="text-2xl font-serif font-bold text-[#4A2F2A] mt-0.5">Welcome Back, {{ user.name.split(' ')[0] }}! 👋</h2>
+            </div>
+            
+            <div class="flex items-center space-x-2 px-3.5 py-2 bg-[#FAF4E8] border border-[#D9A441]/25 rounded-2xl text-[10px] font-bold text-[#4E342E] uppercase shrink-0">
+                <i data-lucide="calendar" class="w-4 h-4 text-[#C96A2B]"></i>
+                <span id="dashboard-date">July 2, 2026</span>
+            </div>
+        </div>
+
+        <!-- TAB PANE 1: DASHBOARD OVERVIEW -->
+        <section id="tab-pane-dashboard" class="space-y-6 tab-pane">
+            
+            <!-- Kirana Khata credit balance header details -->
+            <div class="bg-gradient-to-r from-[#FAF4E8] to-white border border-[#D9A441]/35 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-6 items-stretch relative overflow-hidden">
+                <div class="space-y-3 flex-grow max-w-md">
+                    <span class="text-[10px] font-bold text-[#C96A2B] uppercase tracking-wider block">Bahi Khata Ledger Outstanding Dues</span>
+                    <h3 class="text-3xl font-extrabold text-[#4E342E]">₹{{ dues | int }}</h3>
+                    
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                            <span>Ledger Credit Limit: ₹{{ limit | int }}</span>
+                            {% set usage = (dues / limit * 100) | round | int %}
+                            <span>{{ usage }}% Dues Used</span>
+                        </div>
+                        <div class="w-full bg-[#FAF4E8] border border-[#4E342E]/10 rounded-full h-2 overflow-hidden">
+                            <div class="bg-[#C96A2B] h-2 rounded-full transition-all duration-700" style="width: {{ usage }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 flex items-center justify-between gap-6 shrink-0">
+                    <div class="space-y-1">
+                        <span class="block text-[10px] font-extrabold text-[#2E7D32] uppercase tracking-widest flex items-center gap-1"><i data-lucide="shield-check" class="w-4 h-4"></i> Ledger Secured</span>
+                        <p class="text-[11px] font-semibold text-slate-500 max-w-[200px] leading-relaxed">Settle pending dues at the shop counter or make online payments.</p>
+                    </div>
+                    <button onclick="mockAction('Payment QR Code generated. Redirecting to UPI...')" class="px-5 py-3.5 bg-[#C96A2B] text-white hover:bg-[#B3581E] text-xs font-bold rounded-xl transition-all shadow-md self-center flex items-center space-x-1.5">
+                        <i data-lucide="qr-code" class="w-4 h-4"></i>
+                        <span>Pay Dues</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Grid Widgets -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-all">
+                    <div class="p-2.5 bg-orange-50 rounded-xl"><i data-lucide="shopping-basket" class="w-5 h-5 text-[#C96A2B]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#4E342E] block">{{ total_orders }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Total Orders</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-all">
+                    <div class="p-2.5 bg-red-50 rounded-xl"><i data-lucide="heart" class="w-5 h-5 text-red-500"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#4E342E] block">{{ wishlist_items|length }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Wishlist Items</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-all">
+                    <div class="p-2.5 bg-yellow-50 rounded-xl"><i data-lucide="gift" class="w-5 h-5 text-[#D9A441]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#4E342E] block">{{ reward_points }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Reward Points</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-[#4E342E]/10 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5 hover:scale-[1.02] transition-all">
+                    <div class="p-2.5 bg-emerald-50 rounded-xl"><i data-lucide="sparkles" class="w-5 h-5 text-[#2E7D32]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#2E7D32] block">₹{{ money_saved }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Money Saved</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Split Section: Recent Orders (Left) & Rewards circle (Right) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Recent Orders Summary (L: 65%) -->
+                <div class="lg:col-span-8 bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4">
+                    <h3 class="text-xs font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 flex justify-between items-center">
+                        <span>Recent Orders</span>
+                        <button onclick="switchTab('orders')" class="text-[10px] text-[#C96A2B] hover:underline">View All Orders →</button>
+                    </h3>
+
+                    {% if orders|length == 0 %}
+                    <div class="text-center py-12 text-slate-400 text-xs">
+                        <i data-lucide="package-x" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                        <p>No orders placed yet.</p>
+                        <a href="/" class="text-[#C96A2B] font-bold mt-2 inline-block hover:underline">Browse Products</a>
+                    </div>
+                    {% else %}
+                    <div class="space-y-4">
+                        {% for o in orders[:2] %}
+                        <div class="p-4 bg-orange-50/10 border border-slate-100 rounded-2xl text-xs font-semibold space-y-3 shadow-sm">
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-slate-500 font-mono">Order #{{ o.order_id }}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold 
+                                    {% if o.status == 'Delivered' %}
+                                        bg-emerald-50 text-emerald-700 border border-emerald-100
+                                    {% else %}
+                                        bg-blue-50 text-blue-700 border border-blue-100 animate-pulse
+                                    {% endif %}">
+                                    {{ o.status }}
+                                </span>
+                            </div>
+                            
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-[#4E342E] font-bold truncate max-w-[200px]" title="{{ o.items }}">{{ o.items }}</span>
+                                <span class="text-sm font-extrabold text-[#4E342E]">₹{{ o.total_amount }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-slate-50 text-[10px] font-bold">
+                                <span class="text-slate-400 font-mono font-normal">{{ o.date }}</span>
+                                <div class="flex items-center space-x-3.5">
+                                    <a href="/order/{{ o.order_id }}/invoice" target="_blank" class="text-slate-500 hover:text-slate-800 flex items-center space-x-1"><i data-lucide="download" class="w-3.5 h-3.5"></i><span>Invoice</span></a>
+                                    <button onclick="reorderItems('{{ o.items }}')" class="text-[#C96A2B] hover:text-[#B3581E] flex items-center space-x-1"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Reorder</span></button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Reward Progress Circle (R: 35%) -->
+                <div class="lg:col-span-4 bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm text-center space-y-4">
+                    <h3 class="text-xs font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3">My Kirana Rewards</h3>
+                    
+                    <div class="relative flex justify-center py-2">
+                        <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#C96A2B" />
+                                    <stop offset="100%" stop-color="#D9A441" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="circle-progress-bg" cx="50" cy="50" r="40" />
+                            <circle class="circle-progress-bar" cx="50" cy="50" r="40" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center space-y-0.5">
+                            <span class="text-xl font-extrabold text-[#4E342E]">{{ reward_points }}</span>
+                            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Points</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold text-[#4E342E]">{{ 1000 - reward_points }} Points to next VIP level</p>
+                        <button onclick="mockAction('Points redeem rewards list opened!')" class="w-full py-2 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-white font-bold rounded-xl text-[10px] uppercase tracking-wider shadow-md">Redeem Rewards</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB PANE 2: MY ORDERS HISTORY -->
+        <section id="tab-pane-orders" class="hidden space-y-6 tab-pane">
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">Complete Order Logs</h3>
+                
+                {% if orders|length == 0 %}
+                <div class="text-center py-20 text-slate-400 text-xs">
+                    <i data-lucide="package-x" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i>
+                    <p>You haven't placed any orders yet.</p>
+                    <a href="/" class="text-[#C96A2B] font-bold mt-2 inline-block hover:underline">Start Shopping</a>
+                </div>
+                {% else %}
+                <div class="space-y-4">
+                    {% for o in orders %}
+                    <div class="p-4 bg-orange-50/10 border border-slate-100 rounded-2xl text-xs font-semibold flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:scale-[1.01] transition-all">
+                        <div class="space-y-1.5 flex-grow max-w-lg">
+                            <div class="flex items-center space-x-2 text-[10px]">
+                                <span class="text-slate-500 font-mono font-bold">Order #{{ o.order_id }}</span>
+                                <span class="text-slate-400 font-mono">{{ o.date }}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold 
+                                    {% if o.status == 'Delivered' %}
+                                        bg-emerald-50 text-emerald-700 border border-emerald-100
+                                    {% else %}
+                                        bg-blue-50 text-blue-700 border border-blue-100 animate-pulse
+                                    {% endif %}">
+                                    {{ o.status }}
+                                </span>
+                            </div>
+                            <h4 class="text-xs font-bold text-[#4E342E] leading-normal" title="{{ o.items }}">{{ o.items }}</h4>
+                            <div class="text-[10px] text-slate-400">
+                                <span>Address: <span class="font-normal">{{ o.address }}, {{ o.village }}</span></span>
+                                <span class="mx-1.5">&middot;</span>
+                                <span>Payment: <strong class="font-bold">{{ o.payment_method }}</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="flex md:flex-col items-baseline md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0 border-slate-50">
+                            <span class="text-base font-extrabold text-[#4E342E]">₹{{ o.total_amount }}</span>
+                            <div class="flex items-center space-x-3.5 mt-2 text-[10px] font-bold">
+                                <a href="/order/{{ o.order_id }}/invoice" target="_blank" class="text-slate-500 hover:text-slate-800 flex items-center space-x-1"><i data-lucide="download" class="w-3.5 h-3.5"></i><span>Invoice</span></a>
+                                <button onclick="reorderItems('{{ o.items }}')" class="text-[#C96A2B] hover:text-[#B3581E] flex items-center space-x-1"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Reorder</span></button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- TAB PANE 3: MY WISHLIST -->
+        <section id="tab-pane-wishlist" class="hidden space-y-6 tab-pane">
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm">
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 mb-6">Saved Favorites</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for item in wishlist_items %}
+                    <div class="product-item-card overflow-hidden rounded-2xl bg-white border border-[#4E342E]/10 shadow-sm relative group" id="wishlist-card-{{ item.id }}">
+                         <!-- Image frame -->
+                         <div class="h-32 bg-[#4E342E]/5 overflow-hidden border-b border-[#4E342E]/10 relative">
+                             {% set w_img = item.image %}
+                             {% if item.image == 'maggi' or item.image == 'bhujia' %}
+                                 {% set w_img = 'biscuits' %}
+                             {% elif item.image == 'chana' %}
+                                 {% set w_img = 'dal' %}
+                             {% elif item.image == 'frooti' %}
+                                 {% set w_img = 'mustard_oil' %}
+                             {% elif item.image == 'thumsup' %}
+                                 {% set w_img = 'coffee' %}
+                             {% elif item.image == 'shampoo' %}
+                                 {% set w_img = 'handwash' %}
+                             {% elif item.image == 'lizol' %}
+                                 {% set w_img = 'vim' %}
+                             {% endif %}
+                             <img src="{{ url_for('static', filename='images/' + w_img + '.png') }}" class="object-cover h-full w-full group-hover:scale-110 transition-transform duration-300">
+                         </div>
+
+                         <!-- Content details -->
+                         <div class="p-4 space-y-3">
+                             <div>
+                                 <h4 class="text-xs font-bold text-[#4E342E] leading-snug truncate" title="{{ item.name }}">{{ item.name }}</h4>
+                             </div>
+                             
+                             <div class="flex items-center justify-between text-xs font-bold">
+                                 <span class="text-sm font-extrabold text-[#4E342E]">₹{{ item.price }}</span>
+                             </div>
+
+                             <div class="flex gap-2">
+                                 <button onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }}, {{ item.stock }}); showNotification('Item added to basket!');" class="flex-grow py-2 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-xl text-[10px] hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-wider">
+                                     Add Cart
+                                 </button>
+                                 <button onclick="removeFromWishlist({{ item.id }})" class="p-2 border border-rose-200 text-rose-500 rounded-xl hover:bg-rose-50 transition-colors">
+                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                 </button>
+                             </div>
+                         </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB PANE 4: PROFILE SETTINGS & PERSONAL DETAILS -->
+        <section id="tab-pane-settings" class="hidden space-y-6 tab-pane">
+            
+            <!-- Personal info details card -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3">Personal Information</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-semibold text-[#4E342E]">
+                    <div class="space-y-1">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</span>
+                        <p class="p-3 bg-[#FAF4E8]/40 border border-slate-100 rounded-xl text-slate-700 font-bold">{{ user.name }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number</span>
+                        <p class="p-3 bg-[#FAF4E8]/40 border border-slate-100 rounded-xl text-slate-700 font-bold font-mono">+91 {{ user.mobile }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</span>
+                        <p class="p-3 bg-[#FAF4E8]/40 border border-slate-100 rounded-xl text-slate-700 font-normal">{{ user.username }}@pramodstore.com</p>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Membership Rank</span>
+                        <p class="p-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-800 font-bold">Gold Tier Kirana Account</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password change card -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3">Security & Password</h3>
+                
+                <form onsubmit="event.preventDefault(); mockAction('Password updated successfully!');" class="space-y-4 text-xs font-semibold">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label for="old-pass" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Password</label>
+                            <input type="password" id="old-pass" placeholder="••••••••" class="w-full px-4 py-2.5 border border-[#4A2F2A]/15 rounded-xl bg-white focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label for="new-pass" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Password</label>
+                            <input type="password" id="new-pass" placeholder="••••••••" class="w-full px-4 py-2.5 border border-[#4A2F2A]/15 rounded-xl bg-white focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="px-5 py-2.5 bg-[#4E342E] text-white hover:bg-[#C96A2B] text-xs font-bold rounded-xl transition-all shadow-md">
+                        Update Password
+                    </button>
+                </form>
+            </div>
+
+            <!-- Danger zone card -->
+            <div class="bg-white border border-rose-100 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-bold text-rose-700 uppercase tracking-wider border-b border-rose-50 pb-3">Danger Zone</h3>
+                
+                <div class="flex items-center justify-between text-xs font-semibold gap-4">
+                    <div class="space-y-1">
+                        <span class="block font-bold text-[#4E342E]">Deactivate Account</span>
+                        <p class="font-normal text-slate-400 leading-relaxed max-w-md">Deactivating your account will block login permissions but preserves outstanding credit ledger balances.</p>
+                    </div>
+                    <button onclick="mockAction('Account delete requires owner authorization.')" class="px-4 py-2 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-xl transition-all shrink-0">
+                        Deactivate Account
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB PANE 5: SUPPORT CENTER -->
+        <section id="tab-pane-support" class="hidden space-y-6 tab-pane">
+            
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+                
+                <!-- Support contacts (L: 60%) -->
+                <div class="md:col-span-7 bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3">Contact Store Channels</h3>
+                    
+                    <div class="space-y-3.5 text-xs font-semibold text-[#4E342E]">
+                        <div class="p-3.5 bg-orange-50/20 border border-orange-100 rounded-2xl flex items-center justify-between">
+                            <span class="flex items-center space-x-3">
+                                <i data-lucide="phone" class="w-5 h-5 text-[#C96A2B]"></i>
+                                <span>Pramod Ji Store Counter</span>
+                            </span>
+                            <a href="tel:+919876501100" class="px-3.5 py-1.5 bg-[#C96A2B] text-white text-[10px] font-bold rounded-lg uppercase tracking-wider">Call</a>
+                        </div>
+                        <div class="p-3.5 bg-emerald-50/20 border border-emerald-100 rounded-2xl flex items-center justify-between">
+                            <span class="flex items-center space-x-3">
+                                <i data-lucide="message-square" class="w-5 h-5 text-emerald-600"></i>
+                                <span>WhatsApp Order Desk</span>
+                            </span>
+                            <a href="https://wa.me/919876501100" target="_blank" class="px-3.5 py-1.5 bg-[#2E7D32] text-white text-[10px] font-bold rounded-lg uppercase tracking-wider">Chat</a>
+                        </div>
+                        <div class="p-3.5 bg-indigo-50/20 border border-indigo-100 rounded-2xl flex items-center justify-between">
+                            <span class="flex items-center space-x-3">
+                                <i data-lucide="headphone" class="w-5 h-5 text-indigo-600"></i>
+                                <span>Rampur Delivery desk</span>
+                            </span>
+                            <button onclick="mockAction('Contacting delivery boy Sanjay on line...')" class="px-3.5 py-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider">Connect</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ block (R: 40%) -->
+                <div class="md:col-span-5 bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3">Store FAQs</h3>
+                    
+                    <div class="space-y-3 text-[11px] text-slate-500 font-semibold leading-relaxed">
+                        <div class="space-y-1">
+                            <span class="font-bold text-[#4E342E] block">What is Kirana Khata credit?</span>
+                            <p class="font-normal text-slate-400">It is a virtual trust bahi ledger. Purchases can be charged to credit and paid monthly.</p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="font-bold text-[#4E342E] block">How is delivery scheduled?</span>
+                            <p class="font-normal text-slate-400">Orders placed before 2 PM are delivered the same evening, else the following morning.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- Mobile Sticky Bottom Navigation Menu -->
+<div class="mobile-bottom-nav md:hidden text-[#4E342E]/70 font-extrabold text-[9px] uppercase tracking-wider">
+    <button onclick="switchTab('dashboard')" id="mob-btn-dashboard" class="flex flex-col items-center gap-1 text-[#C96A2B]">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        <span>Overview</span>
+    </button>
+    <button onclick="switchTab('orders')" id="mob-btn-orders" class="flex flex-col items-center gap-1">
+        <i data-lucide="history" class="w-4 h-4"></i>
+        <span>Orders</span>
+    </button>
+    <button onclick="switchTab('wishlist')" id="mob-btn-wishlist" class="flex flex-col items-center gap-1">
+        <i data-lucide="heart" class="w-4 h-4"></i>
+        <span>Wishlist</span>
+    </button>
+    <button onclick="switchTab('settings')" id="mob-btn-settings" class="flex flex-col items-center gap-1">
+        <i data-lucide="user-cog" class="w-4 h-4"></i>
+        <span>Settings</span>
+    </button>
+</div>
+
+<script>
+    // Tab switching scripts
+    function switchTab(tabId) {
+        // Hide all panes
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+        
+        // Remove active class from desktop sidebar buttons
+        document.querySelectorAll('nav button').forEach(b => {
+            b.className = "w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-orange-50/50";
+        });
+        
+        // Remove active colors from mobile bottom nav
+        document.querySelectorAll('.mobile-bottom-nav button').forEach(b => {
+            b.classList.remove('text-[#C96A2B]');
+            b.classList.add('text-[#4E342E]/70');
+        });
+        
+        // Activate target panel
+        document.getElementById(`tab-pane-${tabId}`).classList.remove('hidden');
+        
+        // Activate desktop side menu button
+        const activeNavBtn = document.getElementById(`nav-btn-${tabId}`);
+        if (activeNavBtn) activeNavBtn.className = "w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-orange-50/50 nav-btn-active";
+        
+        // Activate mobile bottom nav button
+        const activeMobBtn = document.getElementById(`mob-btn-${tabId}`);
+        if (activeMobBtn) {
+            activeMobBtn.classList.remove('text-[#4E342E]/70');
+            activeMobBtn.classList.add('text-[#C96A2B]');
+        }
+        
+        // Recompile vector nodes
+        lucide.createIcons();
+    }
+
+    // Time-based greetings builder
+    function buildTimeGreetings() {
+        const hour = new Date().getHours();
+        let greeting = "Good Evening";
+        if (hour < 12) greeting = "Good Morning";
+        else if (hour < 17) greeting = "Good Afternoon";
+        
+        const label = document.getElementById('dashboard-time-greeting');
+        if (label) label.textContent = greeting;
+    }
+
+    // Current date builder
+    function buildCurrentDate() {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const todayStr = new Date().toLocaleDateString('en-US', options);
+        const label = document.getElementById('dashboard-date');
+        if (label) label.textContent = todayStr;
+    }
+
+    // Reorder items: parses order items list and adds them back to local cart
+    function reorderItems(itemsStr) {
+        // Items string example: "Surf Excel Soap x2, Amul Milk x1"
+        const items = itemsStr.split(', ');
+        let activeCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+        
+        items.forEach(itemStr => {
+            const match = itemStr.match(/(.+?)\s*x(\d+)$/);
+            if (match) {
+                const name = match[1].trim();
+                const qty = parseInt(match[2]) || 1;
+                
+                // Fetch mock product details based on name
+                let price = 50; // default mock fallback price
+                let id = 1;
+                
+                // Push or merge
+                let existing = activeCart.find(i => i.name.toLowerCase() === name.toLowerCase());
+                if (existing) {
+                    existing.quantity += qty;
+                } else {
+                    activeCart.push({
+                        id: Math.floor(Math.random() * 1000) + 100, // mock unique id
+                        name: name,
+                        price: price,
+                        quantity: qty,
+                        maxStock: 50
+                    });
+                }
+            }
+        });
+        
+        localStorage.setItem('pramod_store_cart', JSON.stringify(activeCart));
+        if (typeof updateHeaderCartBadge === 'function') {
+            updateHeaderCartBadge();
+        }
+        
+        showNotification("✓ Reordered item(s) added to basket!");
+        setTimeout(() => {
+            window.location.href = "/cart";
+        }, 1200);
+    }
+
+    // Remove wishlist item row
+    function removeFromWishlist(id) {
+        const card = document.getElementById(`wishlist-card-${id}`);
+        if (card) {
+            card.className += " scale-95 opacity-0 transition-all duration-300";
+            setTimeout(() => {
+                card.remove();
+                showNotification("Removed item from wishlist.");
+            }, 300);
+        }
+    }
+
+    // Toast alerts
+    let toastTimeout;
+    function showNotification(msg) {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+        if (!toast || !toastMsg) return;
+        
+        toastMsg.textContent = msg;
+        toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            hideToast();
+        }, 3000);
+    }
+    function hideToast() {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-[-100px]', 'opacity-0');
+        }
+    }
+
+    // Custom alerts handler
+    function mockAction(msg) {
+        alert(`Namaste! ${msg}`);
+    }
+
+    // Initializer
+    document.addEventListener('DOMContentLoaded', () => {
+        buildTimeGreetings();
+        buildCurrentDate();
+    });
+</script>
+{% endblock %}

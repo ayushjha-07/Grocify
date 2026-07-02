@@ -895,6 +895,60 @@ def cart_page():
     )
 
 
+@app.route('/dashboard')
+@app.route('/profile')
+def customer_dashboard():
+    """Customer profile management dashboard."""
+    user = get_current_user()
+    if not user:
+        flash("Please log in to view your customer dashboard.", "error")
+        return redirect(url_for('login'))
+        
+    # Redirect administrators and delivery boys to their respective dashboards
+    if user['role'] in ["Owner", "Clerk"]:
+        return redirect(url_for('admin'))
+    elif user['role'] == "Delivery Boy":
+        return redirect(url_for('delivery_dashboard'))
+        
+    # Get user order history
+    my_orders = [o for o in orders_db if o['mobile'] == user['mobile']]
+    my_orders = sorted(my_orders, key=lambda o: o['order_id'], reverse=True)
+    
+    # Get khata ledger dues and limit
+    ledger = next((k for k in khata_db if k['mobile'] == user['mobile']), None)
+    dues = ledger['outstanding_amount'] if ledger else 0
+    limit = ledger['credit_limit'] if ledger else settings["default_credit_limit"]
+    
+    # Mock wishlist items (pick 3 products from catalog)
+    wishlist_items = products_db[:3]
+    
+    # Calculation stats
+    total_orders = len(my_orders)
+    reward_points = total_orders * 150 + 200
+    money_saved = total_orders * 45
+    
+    # Mock notifications queue
+    notifications = [
+        {"icon": "package", "title": "Order Shipped!", "desc": "Your order #1002 has been handed over to Sanjay (Delivery Boy).", "time": "2 hours ago", "unread": True},
+        {"icon": "tag", "title": "Bazar Offer Available", "desc": "Use code SAVE100 to get ₹100 flat discount on orders above ₹500.", "time": "1 day ago", "unread": False},
+        {"icon": "credit-card", "title": "Khata Credit Charged", "desc": "₹650 charged to your credit ledger for order #1001.", "time": "3 days ago", "unread": False}
+    ]
+    
+    return render_template(
+        'dashboard.html',
+        user=user,
+        orders=my_orders,
+        dues=dues,
+        limit=limit,
+        wishlist_items=wishlist_items,
+        total_orders=total_orders,
+        reward_points=reward_points,
+        money_saved=money_saved,
+        notifications=notifications,
+        settings=settings
+    )
+
+
 @app.route('/delivery_dashboard')
 def delivery_dashboard():
     """Specialized delivery staff mobile workspace."""
