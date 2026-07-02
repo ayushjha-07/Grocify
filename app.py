@@ -1001,6 +1001,7 @@ def inventory_manager():
         low_stock_items=low_stock_items,
         out_of_stock_items=out_of_stock_items,
         categories=categories,
+        users=users_db,
         settings=settings
     )
 
