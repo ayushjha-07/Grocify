@@ -1,0 +1,1035 @@
+{% extends 'base.html' %}
+
+{% block title %}My Basket & Checkout - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Page Animations & Confetti */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fall {
+        0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(80vh) rotate(720deg); opacity: 0; }
+    }
+    @keyframes pulseGlow {
+        0%, 100% { transform: scale(1); opacity: 0.2; }
+        50% { transform: scale(1.05); opacity: 0.4; }
+    }
+    
+    /* SVG Checkmark draw-in keyframes */
+    @keyframes stroke {
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes scale {
+        0%, 100% { transform: none; }
+        50% { transform: scale3d(1.1, 1.1, 1); }
+    }
+    @keyframes fill {
+        to { box-shadow: inset 0 0 0 35px #2e7d32; }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    .confetti-particle {
+        position: absolute;
+        width: 8px;
+        height: 12px;
+        border-radius: 2px;
+        top: 0;
+        pointer-events: none;
+        animation: fall 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        z-index: 50;
+    }
+
+    /* Paper texture overlay */
+    .paper-texture {
+        position: absolute;
+        inset: 0;
+        opacity: 0.045;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Sticky summary box on desktop */
+    @media (min-width: 768px) {
+        .sticky-summary {
+            position: sticky;
+            top: 24px;
+        }
+    }
+
+    /* Success checkmark styles */
+    .checkmark {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #2e7d32;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0 0 0 #2e7d32;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s forwards;
+    }
+    .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #2e7d32;
+        fill: none;
+        animation: stroke .6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        stroke: #fff;
+        fill: none;
+        animation: stroke .3s cubic-bezier(0.65, 0, 0.45, 1) .8s forwards;
+    }
+
+    /* Sticky Mobile Checkout purchase bar */
+    @media (max-width: 767px) {
+        .mobile-sticky-checkout {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(250, 244, 232, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-top: 1.5px solid rgba(217, 164, 65, 0.25);
+            box-shadow: 0 -8px 24px rgba(78, 52, 46, 0.12);
+            z-index: 40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-content-padding {
+            padding-bottom: 95px;
+        }
+    }
+</style>
+
+<!-- Notification Toast -->
+<div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-[#FAF4E8] border border-[#2E7D32]/25 text-[#2E7D32] p-4 rounded-xl shadow-lg font-bold text-xs flex items-center justify-between space-x-4 max-w-md w-full transition-all duration-300 translate-y-[-100px] opacity-0">
+    <span id="toast-msg">Cart updated!</span>
+    <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-600 shrink-0">
+        <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+</div>
+
+<div class="space-y-6 page-content-padding relative overflow-hidden">
+    
+    <!-- Confetti particles generator container -->
+    <div id="confetti-container" class="absolute inset-0 pointer-events-none"></div>
+
+    <!-- Page Title & Header -->
+    <div class="flex items-center space-x-3 border-b border-[#4E342E]/10 pb-4">
+        <i data-lucide="shopping-basket" class="w-7 h-7 text-[#C96A2B]"></i>
+        <div>
+            <h2 class="text-xl md:text-2xl font-serif font-bold text-[#4A2F2A]">Your Shopping Basket</h2>
+            <p class="text-[11px] text-slate-400">Complete checkout using local village credit or digital options.</p>
+        </div>
+    </div>
+
+    <!-- Empty Basket State Dashboard -->
+    <div id="empty-cart-view" class="hidden text-center py-20 bg-white border border-[#4E342E]/10 rounded-3xl p-8 space-y-6 shadow-sm relative overflow-hidden">
+        <div class="paper-texture"></div>
+        <div class="relative flex justify-center">
+            <div class="w-24 h-24 rounded-full bg-[#FAF4E8] flex items-center justify-center border border-[#D9A441]/35">
+                <i data-lucide="shopping-bag" class="w-12 h-12 text-[#C96A2B] animate-bounce"></i>
+            </div>
+        </div>
+        
+        <div class="space-y-2">
+            <h3 class="text-lg font-bold text-[#4E342E]">Your Kirana Basket is Empty</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                Add staples, groceries, fresh dairy, or spices from the bazar catalogue to start shopping.
+            </p>
+        </div>
+
+        <div class="pt-4">
+            <a href="/" class="px-6 py-3.5 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.03] active:scale-[0.97] transition-all shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs inline-flex items-center space-x-1.5">
+                <i data-lucide="store" class="w-4 h-4"></i>
+                <span>Start Shopping</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Order Checkout Success Dashboard -->
+    <div id="success-checkout-view" class="hidden text-center py-16 bg-white border border-emerald-100 rounded-3xl p-8 md:p-12 space-y-6 shadow-md relative overflow-hidden animate-fade-in">
+        <div class="paper-texture"></div>
+        
+        <!-- Animated Checkmark -->
+        <svg class="checkmark mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+
+        <div class="space-y-2">
+            <h3 class="text-2xl font-serif font-bold text-[#4E342E]">Order Placed Successfully!</h3>
+            <p class="text-xs text-[#2E7D32] font-bold uppercase tracking-widest">Namaste, thanks for trusting Pramod General Store!</p>
+            <div class="p-3 bg-[#FAF4E8]/60 border border-[#D9A441]/25 rounded-2xl max-w-md mx-auto space-y-1 mt-4 text-xs text-slate-600 font-semibold leading-relaxed">
+                <p>Order ID: <strong class="text-[#4E342E] font-mono" id="success-order-id">#1005</strong></p>
+                <p>Delivery Slot: <strong class="text-[#2E7D32]" id="success-delivery-slot">Tomorrow Morning</strong></p>
+                <p>Address: <span class="font-normal" id="success-address">Rampur Village</span></p>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-6 max-w-md mx-auto">
+            <a id="download-invoice-btn" href="#" target="_blank" class="w-full sm:w-auto px-6 py-3 bg-[#FAF4E8] border border-[#C96A2B]/40 text-[#C96A2B] font-extrabold rounded-xl hover:scale-[1.02] hover:bg-[#C96A2B]/5 active:scale-[0.98] transition-all uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5 shadow-sm">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Download Invoice</span>
+            </a>
+            <button onclick="mockAction('Tracking details synced with delivery boy.')" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5 shadow-sm">
+                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                <span>Track Order</span>
+            </button>
+            <a href="/" class="w-full sm:w-auto px-6 py-3 bg-[#4E342E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5 shadow-sm">
+                <i data-lucide="store" class="w-4 h-4"></i>
+                <span>Shop More</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Cart & Form Layout Grid -->
+    <div id="active-cart-view" class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Side: Shopping Cart Items & Forms (70%) -->
+        <div class="md:col-span-8 space-y-6">
+            
+            <!-- Cart Items Queue -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4 relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 flex justify-between items-center">
+                    <span>Basket Items</span>
+                    <span id="cart-item-count" class="text-xs text-[#C96A2B] font-bold">0 Items</span>
+                </h3>
+                
+                <!-- Dynamic cart list rows injection -->
+                <div id="cart-rows-container" class="space-y-4"></div>
+            </div>
+
+            <!-- Coupon discount module -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-3 relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <h3 class="text-xs font-bold text-[#4E342E] uppercase tracking-wider flex items-center space-x-1.5">
+                    <i data-lucide="tag" class="w-4 h-4 text-[#C96A2B]"></i>
+                    <span>Apply Kirana Coupon Code</span>
+                </h3>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="relative flex-grow">
+                        <input type="text" id="coupon-code" placeholder="Try code: SAVE100" class="w-full px-4 py-2.5 bg-[#FAF4E8]/40 border border-[#4A2F2A]/15 rounded-xl text-xs uppercase tracking-wider font-bold focus:outline-none focus:border-[#C96A2B] text-[#4E342E] placeholder-[#4A2F2A]/40">
+                    </div>
+                    <button type="button" id="apply-coupon-btn" class="px-5 py-2.5 bg-[#C96A2B] text-white hover:bg-[#B3581E] text-xs font-bold rounded-xl transition-all shadow-md">
+                        Apply
+                    </button>
+                </div>
+                <div id="coupon-feedback" class="text-[10px] font-bold"></div>
+            </div>
+
+            <!-- Delivery Details & Address management -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4 relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center space-x-1.5">
+                    <i data-lucide="map-pin" class="w-4.5 h-4.5 text-[#C96A2B]"></i>
+                    <span>Delivery Address</span>
+                </h3>
+                
+                <!-- Saved / Default Address View -->
+                <div id="address-default-card" class="p-4 bg-[#FAF4E8]/50 border border-[#D9A441]/25 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center text-xs font-bold text-[#4E342E]">
+                        <span class="flex items-center space-x-1"><i data-lucide="check-circle-2" class="w-4 h-4 text-[#2E7D32]"></i><span>Default Address</span></span>
+                        <button type="button" onclick="toggleEditAddress(true)" class="text-[#C96A2B] hover:text-[#B3581E] hover:underline flex items-center space-x-0.5"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i><span>Edit</span></button>
+                    </div>
+                    
+                    <div class="text-xs space-y-1 text-slate-600 font-semibold leading-relaxed">
+                        <p class="font-bold text-[#4E342E] inline-block" id="display-name">{{ customer_name if customer_name else 'Pramod Guest' }}</p>
+                        <p id="display-mobile" class="text-[10px] font-mono text-slate-400">+91 {{ mobile if mobile else '9876501100' }}</p>
+                        <p id="display-full-address" class="font-normal text-slate-500">{{ address if address else 'Counter Cash Purchase, Main Bazaar' }}</p>
+                        <p id="display-village-pin" class="text-[10px] text-slate-400 font-bold uppercase">{{ village if village else 'Rampur' }} - {{ pincode if pincode else '250101' }}</p>
+                    </div>
+                </div>
+
+                <!-- Add/Edit Address Form (drawer toggle) -->
+                <div id="address-edit-drawer" class="hidden bg-[#FAF4E8]/20 p-4 border border-[#4A2F2A]/10 rounded-2xl space-y-3.5 animate-fade-in">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label for="inp-name" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Receiver Name</label>
+                            <input type="text" id="inp-name" value="{{ customer_name }}" placeholder="Ramesh Mishra" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-lg text-xs font-semibold focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                        </div>
+                        <div class="space-y-1">
+                            <label for="inp-mobile" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number</label>
+                            <input type="tel" id="inp-mobile" value="{{ mobile }}" placeholder="9876501101" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-lg text-xs font-semibold focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <label for="inp-address" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Street / Locality Address</label>
+                        <input type="text" id="inp-address" value="{{ address }}" placeholder="Opposite Ram Mandir, Ward No. 3" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-lg text-xs font-semibold focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label for="inp-village" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Village / Town</label>
+                            <input type="text" id="inp-village" value="{{ village }}" placeholder="Rampur" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-lg text-xs font-semibold focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                        </div>
+                        <div class="space-y-1">
+                            <label for="inp-pincode" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pincode</label>
+                            <input type="text" id="inp-pincode" value="{{ pincode }}" placeholder="250101" class="w-full px-3 py-2 border border-[#4A2F2A]/15 bg-white rounded-lg text-xs font-semibold focus:outline-none focus:border-[#C96A2B] text-slate-700">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-2.5 pt-2">
+                        <button type="button" onclick="toggleEditAddress(false)" class="px-4 py-2 border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold rounded-lg transition-all">Cancel</button>
+                        <button type="button" onclick="saveAddressChanges()" class="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-lg transition-all shadow-sm">Save Address</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Time Slot selector -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4 relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center space-x-1.5">
+                    <i data-lucide="clock" class="w-4.5 h-4.5 text-[#C96A2B]"></i>
+                    <span>Delivery Time Slot</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Day Slot options -->
+                    <div class="space-y-2">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivery Day</span>
+                        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                            <label class="border-2 border-[#C96A2B] bg-[#C96A2B]/5 text-[#C96A2B] rounded-xl p-3 flex flex-col items-center cursor-pointer select-none text-center day-slot-label">
+                                <input type="radio" name="delivery_day" value="Today" checked class="hidden" onchange="highlightSlot(this, 'day-slot-label')">
+                                <span class="block font-bold">Today</span>
+                                <span class="block text-[9px] font-normal text-slate-400 mt-0.5">Express Delivery</span>
+                            </label>
+                            <label class="border-2 border-[#4A2F2A]/15 text-[#4E342E] rounded-xl p-3 flex flex-col items-center cursor-pointer select-none text-center day-slot-label hover:border-[#C96A2B]/40">
+                                <input type="radio" name="delivery_day" value="Tomorrow" class="hidden" onchange="highlightSlot(this, 'day-slot-label')">
+                                <span class="block font-bold">Tomorrow</span>
+                                <span class="block text-[9px] font-normal text-slate-400 mt-0.5">Standard Delivery</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Time Slot options -->
+                    <div class="space-y-2">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Preferred Time Window</span>
+                        <div class="grid grid-cols-3 gap-2 text-[10px] font-bold">
+                            <label class="border-2 border-[#C96A2B] bg-[#C96A2B]/5 text-[#C96A2B] rounded-xl py-2 px-1 flex flex-col items-center cursor-pointer select-none text-center time-slot-label">
+                                <input type="radio" name="delivery_time" value="Morning" checked class="hidden" onchange="highlightSlot(this, 'time-slot-label')">
+                                <span class="block font-bold">Morning</span>
+                                <span class="block text-[8px] font-normal text-slate-400 mt-0.5">8 AM - 12 PM</span>
+                            </label>
+                            <label class="border-2 border-[#4A2F2A]/15 text-[#4E342E] rounded-xl py-2 px-1 flex flex-col items-center cursor-pointer select-none text-center time-slot-label hover:border-[#C96A2B]/40">
+                                <input type="radio" name="delivery_time" value="Afternoon" class="hidden" onchange="highlightSlot(this, 'time-slot-label')">
+                                <span class="block font-bold">Afternoon</span>
+                                <span class="block text-[8px] font-normal text-slate-400 mt-0.5">12 PM - 4 PM</span>
+                            </label>
+                            <label class="border-2 border-[#4A2F2A]/15 text-[#4E342E] rounded-xl py-2 px-1 flex flex-col items-center cursor-pointer select-none text-center time-slot-label hover:border-[#C96A2B]/40">
+                                <input type="radio" name="delivery_time" value="Evening" class="hidden" onchange="highlightSlot(this, 'time-slot-label')">
+                                <span class="block font-bold">Evening</span>
+                                <span class="block text-[8px] font-normal text-slate-400 mt-0.5">4 PM - 8 PM</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Methods with Icons -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-4 relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center space-x-1.5">
+                    <i data-lucide="wallet" class="w-4.5 h-4.5 text-[#C96A2B]"></i>
+                    <span>Payment Methods</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold text-[#4E342E]">
+                    <label class="border-2 border-[#C96A2B] bg-[#C96A2B]/5 rounded-2xl p-4 flex items-center justify-between cursor-pointer select-none pay-label">
+                        <span class="flex items-center space-x-3">
+                            <i data-lucide="banknote" class="w-5 h-5 text-[#C96A2B]"></i>
+                            <span>Cash on Delivery (COD)</span>
+                        </span>
+                        <input type="radio" name="payment_method" value="Cash on Delivery" checked class="text-[#C96A2B] focus:ring-[#C96A2B]" onchange="highlightPayment(this)">
+                    </label>
+
+                    <label class="border-2 border-[#4A2F2A]/15 rounded-2xl p-4 flex items-center justify-between cursor-pointer select-none pay-label hover:border-[#C96A2B]/40">
+                        <span class="flex items-center space-x-3">
+                            <i data-lucide="book-open" class="w-5 h-5 text-[#2E7D32]"></i>
+                            <span>Kirana Khata Credit</span>
+                        </span>
+                        <input type="radio" name="payment_method" value="Khata Credit" class="text-[#C96A2B] focus:ring-[#C96A2B]" onchange="highlightPayment(this)">
+                    </label>
+
+                    <label class="border-2 border-[#4A2F2A]/15 rounded-2xl p-4 flex items-center justify-between cursor-pointer select-none pay-label hover:border-[#C96A2B]/40 opacity-70">
+                        <span class="flex items-center space-x-3">
+                            <i data-lucide="smartphone" class="w-5 h-5 text-indigo-600"></i>
+                            <span>BHIM UPI / PhonePe / Paytm</span>
+                        </span>
+                        <input type="radio" name="payment_method" value="UPI" class="text-[#C96A2B] focus:ring-[#C96A2B]" onchange="highlightPayment(this)">
+                    </label>
+
+                    <label class="border-2 border-[#4A2F2A]/15 rounded-2xl p-4 flex items-center justify-between cursor-pointer select-none pay-label hover:border-[#C96A2B]/40 opacity-70">
+                        <span class="flex items-center space-x-3">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-blue-600"></i>
+                            <span>Debit / Credit Card</span>
+                        </span>
+                        <input type="radio" name="payment_method" value="Card" class="text-[#C96A2B] focus:ring-[#C96A2B]" onchange="highlightPayment(this)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Optional Order Notes -->
+            <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 shadow-sm space-y-2 relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <label for="order-notes" class="block text-xs font-bold text-[#4A2F2A]/90 uppercase tracking-wider">Delivery Instructions / Order Notes (Optional)</label>
+                <textarea id="order-notes" placeholder="Example: Please leave the packages at the porch, or don't ring the bell." rows="2" class="w-full px-4 py-3 bg-[#FAF4E8]/40 border border-[#4A2F2A]/15 rounded-xl text-xs focus:outline-none focus:border-[#C96A2B] text-slate-700"></textarea>
+            </div>
+
+            <!-- Frequently Bought Together Catalog upselling -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-bold text-[#4A2F2A]/80 uppercase tracking-widest flex items-center space-x-1.5">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-[#D9A441] animate-pulse"></i>
+                    <span>Frequently Bought Together</span>
+                </h3>
+                
+                <div class="flex space-x-6 overflow-x-auto pb-4 scrollbar-thin">
+                    {% for item in frequent_items %}
+                    <div class="product-item-card overflow-hidden rounded-2xl bg-white border border-[#4E342E]/10 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:border-[#C65D2E]/40 hover:shadow-lg relative group min-w-[200px] max-w-[200px] shrink-0">
+                         <!-- Image frame -->
+                         <div class="h-28 bg-[#4E342E]/5 overflow-hidden border-b border-[#4E342E]/10 relative group">
+                             {% set f_img = item.image %}
+                             {% if item.image == 'maggi' or item.image == 'bhujia' %}
+                                 {% set f_img = 'biscuits' %}
+                             {% elif item.image == 'chana' %}
+                                 {% set f_img = 'dal' %}
+                             {% elif item.image == 'frooti' %}
+                                 {% set f_img = 'mustard_oil' %}
+                             {% elif item.image == 'thumsup' %}
+                                 {% set f_img = 'coffee' %}
+                             {% elif item.image == 'shampoo' %}
+                                 {% set f_img = 'handwash' %}
+                             {% elif item.image == 'lizol' %}
+                                 {% set f_img = 'vim' %}
+                             {% endif %}
+                             <img src="{{ url_for('static', filename='images/' + f_img + '.png') }}" class="object-cover h-full w-full group-hover:scale-110 transition-transform duration-300">
+                         </div>
+
+                         <!-- Content details -->
+                         <div class="p-3 space-y-2">
+                             <div>
+                                 <h4 class="text-xs font-bold text-[#4E342E] truncate" title="{{ item.name }}">{{ item.name }}</h4>
+                             </div>
+                             
+                             <div class="flex items-center justify-between text-xs font-bold">
+                                 <span class="text-sm font-extrabold text-[#4E342E]">₹{{ item.price }}</span>
+                             </div>
+
+                             <button onclick="addUpsellItem({{ item.id }}, '{{ item.name }}', {{ item.price }}, {{ item.stock }})" class="w-full py-1.5 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-lg text-[9px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-orange-950/10 hover:shadow-orange-950/20">
+                                 Quick Add
+                             </button>
+                         </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Side: Order Summary Card (30% - Sticky on Desktop) -->
+        <div class="md:col-span-4 sticky-summary">
+            <div class="bg-white border border-[#D9A441]/35 rounded-3xl p-6 shadow-[0_12px_36px_rgba(78,52,46,0.06)] space-y-5 relative overflow-hidden">
+                <div class="paper-texture"></div>
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C96A2B] to-[#D9A441]"></div>
+                
+                <h3 class="text-sm font-bold text-[#4E342E] uppercase tracking-wider border-b border-slate-100 pb-3 flex items-center space-x-1.5">
+                    <i data-lucide="receipt" class="w-4.5 h-4.5 text-[#C96A2B]"></i>
+                    <span>Order Summary</span>
+                </h3>
+
+                <!-- Summary Breakdown rows -->
+                <div class="text-xs space-y-3.5 font-bold text-slate-500">
+                    <div class="flex justify-between">
+                        <span>Items Subtotal</span>
+                        <span class="text-[#4E342E]" id="summary-subtotal">₹0</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span>Delivery Fee</span>
+                        <span class="text-[#4E342E]" id="summary-delivery">₹0</span>
+                    </div>
+
+                    <div id="summary-savings-row" class="hidden flex justify-between text-[#2E7D32]">
+                        <span>Coupon Savings</span>
+                        <span id="summary-savings-amount">-₹0</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>Estimated Taxes</span>
+                        <span class="text-[#4E342E]">₹0 (Incl.)</span>
+                    </div>
+                    
+                    <!-- Free Delivery Progress Bar threshold -->
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex justify-between items-center text-[10px]" id="shipping-progress-text">
+                            <span>₹500 away from FREE Delivery</span>
+                            <span class="font-extrabold" id="shipping-percentage">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div id="shipping-progress-bar" class="bg-[#C96A2B] h-1.5 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <div class="flex justify-between text-base font-extrabold text-[#4E342E]">
+                        <span>Grand Total</span>
+                        <span id="summary-grandtotal">₹0</span>
+                    </div>
+                </div>
+
+                <!-- Checkout Placement Button -->
+                <div class="pt-2">
+                    <button type="button" onclick="submitFinalOrderCheckout()" id="summary-place-order-btn" class="w-full py-4 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-md shadow-emerald-950/20 uppercase tracking-widest text-xs btn-ripple flex items-center justify-center space-x-2">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        <span>Place Order</span>
+                    </button>
+                    
+                    <a href="/" class="w-full mt-3 py-3.5 bg-[#FAF4E8] border border-[#4A2F2A]/10 hover:bg-[#4A2F2A]/5 text-[#4A2F2A]/70 font-extrabold rounded-xl transition-all uppercase tracking-widest text-[10px] flex items-center justify-center space-x-1.5">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                        <span>Continue Shopping</span>
+                    </a>
+                </div>
+
+                <!-- Trust Badges -->
+                <div class="grid grid-cols-2 gap-3 text-[9px] uppercase tracking-wider font-extrabold text-slate-400 pt-2 border-t border-slate-100">
+                    <div class="flex items-center space-x-1.5"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i><span>100% Secure</span></div>
+                    <div class="flex items-center space-x-1.5"><i data-lucide="package" class="w-4 h-4 text-orange-600"></i><span>Genuine</span></div>
+                    <div class="flex items-center space-x-1.5"><i data-lucide="refresh-cw" class="w-4 h-4 text-blue-600"></i><span>Easy Return</span></div>
+                    <div class="flex items-center space-x-1.5"><i data-lucide="leaf" class="w-4 h-4 text-emerald-700"></i><span>Traditional</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Mobile Sticky Bottom purchase card bar -->
+<div class="mobile-sticky-checkout hidden">
+    <div>
+        <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Grand Total</span>
+        <span class="text-lg font-extrabold text-[#4E342E]" id="mobile-summary-grandtotal">₹0</span>
+    </div>
+    <button type="button" onclick="submitFinalOrderCheckout()" id="mobile-place-order-btn" class="px-6 py-3.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-emerald-950/20 uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5 shrink-0">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        <span>Place Order</span>
+    </button>
+</div>
+
+<script>
+    // State management
+    let pageCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+    let isEditingAddress = false;
+    let couponDiscount = 0;
+    let activeCoupon = "";
+    
+    // Address values loaded from template context
+    let receiverName = "{{ customer_name }}";
+    let receiverMobile = "{{ mobile }}";
+    let streetAddress = "{{ address }}";
+    let villageName = "{{ village }}";
+    let pinCode = "{{ pincode }}";
+
+    // Setup coupon lists
+    const VALID_COUPONS = {
+        "SAVE100": { discount: 100, minSubtotal: 500 },
+        "KIRANA10": { discount: 50, minSubtotal: 300 }
+    };
+
+    // Render Shopping Cart Items
+    function renderCheckoutCart() {
+        const container = document.getElementById('cart-rows-container');
+        const emptyView = document.getElementById('empty-cart-view');
+        const activeView = document.getElementById('active-cart-view');
+        const countLabel = document.getElementById('cart-item-count');
+        
+        if (pageCart.length === 0) {
+            activeView.classList.add('hidden');
+            emptyView.classList.remove('hidden');
+            return;
+        }
+        
+        emptyView.classList.add('hidden');
+        activeView.classList.remove('hidden');
+        countLabel.textContent = `${pageCart.length} Item(s)`;
+        
+        container.innerHTML = "";
+        
+        pageCart.forEach((item, idx) => {
+            // Match correct static images files
+            let imgFile = item.name.toLowerCase().includes('ghee') ? 'ghee' :
+                          item.name.toLowerCase().includes('salt') ? 'salt' :
+                          item.name.toLowerCase().includes('oil') ? 'mustard_oil' :
+                          item.name.toLowerCase().includes('dal') ? 'dal' :
+                          item.name.toLowerCase().includes('rice') ? 'rice' :
+                          item.name.toLowerCase().includes('tea') ? 'tea' : 'biscuits';
+            
+            const card = document.createElement('div');
+            card.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-orange-50/10 border border-slate-100 rounded-2xl hover:scale-[1.01] hover:shadow-md transition-all duration-300";
+            
+            card.innerHTML = `
+                <!-- Product details left block -->
+                <div class="flex items-center space-x-4 w-full sm:w-auto">
+                    <div class="w-16 h-16 bg-[#FAF4E8] rounded-xl border border-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                        <img src="/static/images/${imgFile}.png" class="object-cover h-full w-full">
+                    </div>
+                    
+                    <div class="space-y-0.5 min-w-0 flex-grow sm:flex-grow-0">
+                        <span class="text-[9px] font-bold text-[#E5A93B] uppercase tracking-wider block">staples & grocery</span>
+                        <h4 class="text-xs font-bold text-[#4E342E] leading-tight truncate max-w-[200px]" title="${item.name}">${item.name}</h4>
+                        <span class="text-[10px] text-slate-400 block font-semibold">Unit Price: ₹${item.price}</span>
+                    </div>
+                </div>
+
+                <!-- Product action columns right block -->
+                <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t sm:border-t-0 pt-2.5 sm:pt-0 border-slate-100">
+                    
+                    <!-- Qty adjuster -->
+                    <div class="flex items-center space-x-1.5 border border-[#4A2F2A]/10 rounded-xl p-1 bg-[#FAF4E8]/20">
+                        <button onclick="updatePageQty(${item.id}, -1)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+                        <span class="w-8 text-center text-xs font-extrabold text-[#4E342E]">${item.quantity}</span>
+                        <button onclick="updatePageQty(${item.id}, 1)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+                    </div>
+
+                    <!-- Subtotal & remove buttons -->
+                    <div class="text-right shrink-0">
+                        <span class="text-sm font-extrabold text-[#4E342E] block">₹${item.price * item.quantity}</span>
+                        <div class="flex items-center space-x-2 mt-0.5 text-[9px] font-bold text-slate-400">
+                            <button onclick="removeFromPageCart(${item.id})" class="text-rose-500 hover:text-rose-700 transition-colors uppercase">Remove</button>
+                            <span>&middot;</span>
+                            <button onclick="mockAction('Item marked as preferred!')" class="hover:text-[#C96A2B] transition-colors uppercase">Wishlist</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        
+        lucide.createIcons();
+        updateSummaryCard();
+    }
+
+    // Update quantity
+    function updatePageQty(id, change) {
+        let item = pageCart.find(i => i.id === id);
+        if (item) {
+            const nextQty = item.quantity + change;
+            if (nextQty >= 1 && nextQty <= item.maxStock) {
+                item.quantity = nextQty;
+                localStorage.setItem('pramod_store_cart', JSON.stringify(pageCart));
+                
+                // Keep global base badge count updated
+                if (typeof updateHeaderCartBadge === 'function') {
+                    updateHeaderCartBadge();
+                }
+                renderCheckoutCart();
+            } else if (nextQty < 1) {
+                removeFromPageCart(id);
+            } else {
+                showNotification(`Only ${item.maxStock} units of this item are currently in stock.`);
+            }
+        }
+    }
+
+    // Remove item
+    function removeFromPageCart(id) {
+        pageCart = pageCart.filter(i => i.id !== id);
+        localStorage.setItem('pramod_store_cart', JSON.stringify(pageCart));
+        if (typeof updateHeaderCartBadge === 'function') {
+            updateHeaderCartBadge();
+        }
+        renderCheckoutCart();
+        showNotification("Item removed from basket.");
+    }
+
+    // Upsell items Quick Add
+    function addUpsellItem(id, name, price, maxStock) {
+        let existing = pageCart.find(i => i.id === id);
+        if (existing) {
+            if (existing.quantity < maxStock) {
+                existing.quantity++;
+            } else {
+                showNotification(`Limit reached! Only ${maxStock} items available.`);
+                return;
+            }
+        } else {
+            pageCart.push({
+                id: id,
+                name: name,
+                price: price,
+                quantity: 1,
+                maxStock: maxStock
+            });
+        }
+        
+        localStorage.setItem('pramod_store_cart', JSON.stringify(pageCart));
+        if (typeof updateHeaderCartBadge === 'function') {
+            updateHeaderCartBadge();
+        }
+        renderCheckoutCart();
+        showNotification(`Added ${name} to your basket!`);
+    }
+
+    // Calculations & Summary updates
+    function updateSummaryCard() {
+        const subtotalEl = document.getElementById('summary-subtotal');
+        const deliveryEl = document.getElementById('summary-delivery');
+        const grandtotalEl = document.getElementById('summary-grandtotal');
+        const mobGrandtotalEl = document.getElementById('mobile-summary-grandtotal');
+        const progressText = document.getElementById('shipping-progress-text');
+        const progressBar = document.getElementById('shipping-progress-bar');
+        const progressPercent = document.getElementById('shipping-percentage');
+        
+        const savingsRow = document.getElementById('summary-savings-row');
+        const savingsAmt = document.getElementById('summary-savings-amount');
+        
+        // Sum subtotal
+        const subtotal = pageCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
+        
+        // Delivery calculations
+        const freeThreshold = {{ settings.free_delivery_threshold if settings else '500' }};
+        const deliveryCharge = {{ settings.delivery_charge if settings else '30' }};
+        let shipping = subtotal >= freeThreshold ? 0 : deliveryCharge;
+        
+        deliveryEl.textContent = shipping === 0 ? "FREE" : `₹${shipping}`;
+        if (shipping === 0) {
+            deliveryEl.className = "text-[#2E7D32] font-bold";
+        } else {
+            deliveryEl.className = "text-[#4E342E]";
+        }
+        
+        // Shipping progress bar calculations
+        if (subtotal >= freeThreshold) {
+            progressText.innerHTML = `<span class="text-[#2E7D32] font-bold flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> You unlocked FREE Delivery!</span>`;
+            progressBar.style.width = "100%";
+            progressBar.className = "bg-[#2E7D32] h-1.5 rounded-full transition-all duration-500";
+            progressPercent.textContent = "100%";
+        } else {
+            const missing = freeThreshold - subtotal;
+            progressText.innerHTML = `<span>Add <strong>₹${missing}</strong> more for FREE delivery</span>`;
+            const pct = Math.min(100, Math.floor((subtotal / freeThreshold) * 100));
+            progressBar.style.width = `${pct}%`;
+            progressBar.className = "bg-[#C96A2B] h-1.5 rounded-full transition-all duration-500";
+            progressPercent.textContent = `${pct}%`;
+        }
+        lucide.createIcons();
+
+        // Coupon updates
+        if (activeCoupon !== "" && subtotal >= VALID_COUPONS[activeCoupon].minSubtotal) {
+            couponDiscount = VALID_COUPONS[activeCoupon].discount;
+            savingsRow.classList.remove('hidden');
+            savingsAmt.textContent = `-₹${couponDiscount}`;
+        } else {
+            couponDiscount = 0;
+            savingsRow.classList.add('hidden');
+        }
+        
+        const grandTotal = Math.max(0, subtotal + shipping - couponDiscount);
+        grandtotalEl.textContent = `₹${grandTotal.toLocaleString()}`;
+        if (mobGrandtotalEl) mobGrandtotalEl.textContent = `₹${grandTotal.toLocaleString()}`;
+    }
+
+    // Toggle address editing
+    function toggleEditAddress(show) {
+        const defaultCard = document.getElementById('address-default-card');
+        const editDrawer = document.getElementById('address-edit-drawer');
+        
+        if (show) {
+            defaultCard.classList.add('hidden');
+            editDrawer.classList.remove('hidden');
+        } else {
+            defaultCard.classList.remove('hidden');
+            editDrawer.classList.add('hidden');
+        }
+    }
+
+    // Save Address inputs locally
+    function saveAddressChanges() {
+        const nameVal = document.getElementById('inp-name').value.trim();
+        const mobVal = document.getElementById('inp-mobile').value.trim();
+        const addrVal = document.getElementById('inp-address').value.trim();
+        const vilVal = document.getElementById('inp-village').value.trim();
+        const pinVal = document.getElementById('inp-pincode').value.trim();
+        
+        if (nameVal.length < 3 || addrVal.length < 5 || vilVal.length < 3) {
+            showNotification("Please fill in valid address details.");
+            return;
+        }
+        
+        receiverName = nameVal;
+        receiverMobile = mobVal;
+        streetAddress = addrVal;
+        villageName = vilVal;
+        pinCode = pinVal;
+        
+        // Update display text card
+        document.getElementById('display-name').textContent = receiverName;
+        document.getElementById('display-mobile').textContent = `+91 ${receiverMobile}`;
+        document.getElementById('display-full-address').textContent = streetAddress;
+        document.getElementById('display-village-pin').textContent = `${villageName} - ${pinCode}`;
+        
+        toggleEditAddress(false);
+        showNotification("Delivery address updated successfully.");
+    }
+
+    // Apply coupon
+    document.getElementById('apply-coupon-btn').addEventListener('click', () => {
+        const inp = document.getElementById('coupon-code');
+        const code = inp.value.trim().toUpperCase();
+        const feedback = document.getElementById('coupon-feedback');
+        
+        const subtotal = pageCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        if (VALID_COUPONS[code]) {
+            const rules = VALID_COUPONS[code];
+            if (subtotal >= rules.minSubtotal) {
+                activeCoupon = code;
+                feedback.textContent = `Applied Successfully ✓ (Savings: ₹${rules.discount})`;
+                feedback.className = "text-[10px] font-bold text-[#2E7D32] animate-bounce";
+                updateSummaryCard();
+            } else {
+                feedback.textContent = `Minimum subtotal of ₹${rules.minSubtotal} required for this coupon.`;
+                feedback.className = "text-[10px] font-bold text-rose-500";
+            }
+        } else {
+            feedback.textContent = "Invalid Coupon Code! Try code: SAVE100";
+            feedback.className = "text-[10px] font-bold text-rose-500";
+        }
+    });
+
+    // Highlights slot selection
+    function highlightSlot(radioInput, className) {
+        document.querySelectorAll(`.${className}`).forEach(label => {
+            label.className = `${className} border-2 border-[#4A2F2A]/15 text-[#4E342E] rounded-xl p-3 flex flex-col items-center cursor-pointer select-none text-center hover:border-[#C96A2B]/40`;
+        });
+        
+        // Time labels need different padding adjustment
+        if (className === 'time-slot-label') {
+            document.querySelectorAll(`.${className}`).forEach(label => {
+                label.className = `${className} border-2 border-[#4A2F2A]/15 text-[#4E342E] rounded-xl py-2 px-1 flex flex-col items-center cursor-pointer select-none text-center hover:border-[#C96A2B]/40`;
+            });
+        }
+        
+        const activeLabel = radioInput.closest('label');
+        if (className === 'time-slot-label') {
+            activeLabel.className = `${className} border-2 border-[#C96A2B] bg-[#C96A2B]/5 text-[#C96A2B] rounded-xl py-2 px-1 flex flex-col items-center cursor-pointer select-none text-center`;
+        } else {
+            activeLabel.className = `${className} border-2 border-[#C96A2B] bg-[#C96A2B]/5 text-[#C96A2B] rounded-xl p-3 flex flex-col items-center cursor-pointer select-none text-center`;
+        }
+    }
+
+    // Highlight payment labels
+    function highlightPayment(radioInput) {
+        document.querySelectorAll('.pay-label').forEach(label => {
+            label.className = "border-2 border-[#4A2F2A]/15 rounded-2xl p-4 flex items-center justify-between cursor-pointer select-none pay-label hover:border-[#C96A2B]/40";
+        });
+        const activeLabel = radioInput.closest('label');
+        activeLabel.className = "border-2 border-[#C96A2B] bg-[#C96A2B]/5 rounded-2xl p-4 flex items-center justify-between cursor-pointer select-none pay-label";
+    }
+
+    // Toast functions
+    function showNotification(msg) {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+        if (!toast || !toastMsg) return;
+        
+        toastMsg.textContent = msg;
+        toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            hideToast();
+        }, 3000);
+    }
+    function hideToast() {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-[-100px]', 'opacity-0');
+        }
+    }
+
+    // Confetti particles triggers
+    function triggerSuccessConfetti() {
+        const container = document.getElementById('confetti-container');
+        if (!container) return;
+        const colors = ['#C96A2B', '#FAF4E8', '#D9A441', '#2E7D32', '#3B82F6', '#EC4899'];
+        for (let i = 0; i < 40; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'confetti-particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.animationDelay = Math.random() * 1.5 + 's';
+            particle.style.transform = `scale(${Math.random() * 0.8 + 0.5})`;
+            container.appendChild(particle);
+            setTimeout(() => particle.remove(), 4000);
+        }
+    }
+
+    // Place Order checkout AJAX post
+    function submitFinalOrderCheckout() {
+        if (pageCart.length === 0) {
+            showNotification("Your cart is empty!");
+            return;
+        }
+        
+        if (streetAddress.trim() === "" || receiverName.trim() === "" || receiverMobile.trim() === "") {
+            showNotification("Please edit and complete your delivery address details first.");
+            toggleEditAddress(true);
+            return;
+        }
+
+        const placeOrderBtn = document.getElementById('summary-place-order-btn');
+        const mobPlaceOrderBtn = document.getElementById('mobile-place-order-btn');
+        const originalHTML = placeOrderBtn.innerHTML;
+        
+        // Show loading spinner
+        [placeOrderBtn, mobPlaceOrderBtn].forEach(btn => {
+            if (btn) {
+                btn.setAttribute('disabled', 'true');
+                btn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Placing Order...</span>
+                `;
+            }
+        });
+
+        // Collect time values
+        const activeDayRadio = document.querySelector('input[name="delivery_day"]:checked');
+        const activeTimeRadio = document.querySelector('input[name="delivery_time"]:checked');
+        const deliverySlot = `${activeDayRadio.value} ${activeTimeRadio.value}`;
+
+        // Collect payment method
+        const activePayRadio = document.querySelector('input[name="payment_method"]:checked');
+        const payMethod = activePayRadio.value;
+
+        // Notes
+        const notes = document.getElementById('order-notes').value.trim();
+
+        // Build parameters matching app.py checkout expectations
+        const formData = new URLSearchParams();
+        formData.append('customer_name', receiverName);
+        formData.append('mobile', receiverMobile);
+        formData.append('address', streetAddress);
+        formData.append('village', villageName);
+        formData.append('pincode', pinCode);
+        formData.append('payment_method', payMethod);
+        formData.append('cart_data', JSON.stringify(pageCart));
+
+        // Submit order
+        fetch('/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+        })
+        .then(response => {
+            // SUCCESS Redirect to home page
+            if (response.redirected && response.url.endsWith('/')) {
+                return response.text().then(html => {
+                    // Extract Order ID from redirect response flashes
+                    const match = html.match(/Order\s*#(\d+)\s*placed\s*successfully/i);
+                    const orderId = match ? match[1] : (1001 + Math.floor(Math.random() * 50));
+                    
+                    // Show success screen dashboard
+                    document.getElementById('active-cart-view').classList.add('hidden');
+                    const successView = document.getElementById('success-checkout-view');
+                    successView.classList.remove('hidden');
+                    
+                    // Populate success card details
+                    document.getElementById('success-order-id').textContent = `#${orderId}`;
+                    document.getElementById('success-delivery-slot').textContent = deliverySlot;
+                    document.getElementById('success-address').textContent = `${streetAddress}, ${villageName} - ${pinCode}`;
+                    
+                    // Link invoice download PDF button
+                    const downloadBtn = document.getElementById('download-invoice-btn');
+                    downloadBtn.href = `/order/${orderId}/invoice`;
+                    
+                    // Hide mobile sticky bar
+                    const stickyBar = document.querySelector('.mobile-sticky-checkout');
+                    stickyBar.classList.remove('flex');
+                    stickyBar.classList.add('hidden');
+                    
+                    // Trigger success elements
+                    triggerSuccessConfetti();
+                    
+                    // Reset localStorage cart
+                    localStorage.removeItem('pramod_store_cart');
+                    if (typeof updateHeaderCartBadge === 'function') {
+                        updateHeaderCartBadge();
+                    }
+                });
+            } else {
+                // FAILED: Parse error flashes
+                return response.text().then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const flashSpan = doc.querySelector('#flash-message span');
+                    const errorMsg = flashSpan ? flashSpan.textContent : "Checkout failed. Ledger credit limit exceeded or items out of stock.";
+                    
+                    showNotification(`Checkout Failed! ${errorMsg}`);
+                    
+                    // Reset button states
+                    [placeOrderBtn, mobPlaceOrderBtn].forEach(btn => {
+                        if (btn) {
+                            btn.removeAttribute('disabled');
+                            btn.innerHTML = originalHTML;
+                        }
+                    });
+                    lucide.createIcons();
+                });
+            }
+        })
+        .catch(error => {
+            showNotification("Connection error. Please check your network and try again.");
+            [placeOrderBtn, mobPlaceOrderBtn].forEach(btn => {
+                if (btn) {
+                    btn.removeAttribute('disabled');
+                    btn.innerHTML = originalHTML;
+                }
+            });
+            lucide.createIcons();
+        });
+    }
+
+    // Toggle mobile bar
+    function toggleMobileCheckoutBar() {
+        const stickyBar = document.querySelector('.mobile-sticky-checkout');
+        if (window.innerWidth <= 767 && pageCart.length > 0) {
+            stickyBar.classList.remove('hidden');
+            stickyBar.classList.add('flex');
+        } else {
+            stickyBar.classList.remove('flex');
+            stickyBar.classList.add('hidden');
+        }
+    }
+
+    // Initializer
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCheckoutCart();
+        toggleMobileCheckoutBar();
+        window.addEventListener('resize', toggleMobileCheckoutBar);
+    });
+</script>
+{% endblock %}

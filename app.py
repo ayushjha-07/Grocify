@@ -861,6 +861,40 @@ def product_details(product_id):
     )
 
 
+@app.route('/cart')
+def cart_page():
+    """Shopping Cart and Checkout Page."""
+    user = get_current_user()
+    customer_name = ""
+    mobile = ""
+    address = ""
+    village = ""
+    pincode = ""
+    if user:
+        customer_name = user['name']
+        mobile = user['mobile']
+        # Fetch previous order details to load default address fields
+        prior_order = next((o for o in reversed(orders_db) if o['mobile'] == mobile), None)
+        if prior_order:
+            address = prior_order.get('address', '')
+            village = prior_order.get('village', '')
+            pincode = prior_order.get('pincode', '')
+            
+    # Recommended products: Frequently Bought Together (max 4 items)
+    frequent_items = sorted(products_db, key=lambda x: x['price'], reverse=True)[:6]
+    
+    return render_template(
+        'cart.html',
+        customer_name=customer_name,
+        mobile=mobile,
+        address=address,
+        village=village,
+        pincode=pincode,
+        frequent_items=frequent_items,
+        settings=settings
+    )
+
+
 @app.route('/delivery_dashboard')
 def delivery_dashboard():
     """Specialized delivery staff mobile workspace."""
