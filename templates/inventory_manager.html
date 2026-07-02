@@ -104,6 +104,10 @@
                 <i data-lucide="settings" class="w-4 h-4"></i>
                 <span>Settings & Config</span>
             </button>
+            <button onclick="switchManagerTab('notifications')" id="btn-tab-notifications" class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                <span>Alerts & Notifications</span>
+            </button>
             <hr class="border-slate-100 my-2">
             <a href="/admin" class="w-full px-4 py-3 rounded-xl transition-all flex items-center space-x-2.5 hover:bg-slate-50 text-slate-700">
                 <i data-lucide="arrow-left-circle" class="w-4 h-4"></i>
@@ -1920,6 +1924,129 @@
                     </div>
 
                 </div>
+            </div>
+        </section>
+
+        <!-- TAB SECTION 13: ALERTS & NOTIFICATION CENTER -->
+        <section id="pane-tab-notifications" class="hidden space-y-6 tab-pane animate-slide-up">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">Alerts & Notification Center</h3>
+                    <p class="text-xs text-slate-400">Manage real-time notifications, critical stock level alerts, and predictive business recommendations.</p>
+                </div>
+                
+                <div class="flex gap-2 shrink-0">
+                    <button type="button" onclick="mockAction('All alerts marked as read.')" class="px-4 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center space-x-1">
+                        <i data-lucide="check-check" class="w-4 h-4"></i>
+                        <span>Mark All Read</span>
+                    </button>
+                    <button type="button" onclick="mockAction('Notifications history cleared.')" class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold rounded-xl transition-all">Clear History</button>
+                </div>
+            </div>
+
+            <!-- Top Notification KPIs -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-semibold text-slate-500">
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-blue-50 rounded-xl"><i data-lucide="bell-ring" class="w-5 h-5 text-[#2563EB] animate-bounce"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-slate-800 block">3 Alerts</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Unread Alerts</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-red-50 rounded-xl"><i data-lucide="alert-octagon" class="w-5 h-5 text-red-500"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-red-500 block">1 Stock Risk</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Critical Alerts</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-violet-50 rounded-xl"><i data-lucide="brain-circuit" class="w-5 h-5 text-[#7C3AED]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#7C3AED] block">2 Offers</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">AI Recommendations</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center space-x-3.5">
+                    <div class="p-2.5 bg-emerald-50 rounded-xl"><i data-lucide="shield-check" class="w-5 h-5 text-[#16A34A]"></i></div>
+                    <div class="space-y-0.5">
+                        <span class="text-xl font-extrabold text-[#16A34A] block">4 Resolved</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block tracking-wider">Resolved Today</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Timeline feed & AI recommendations panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Notification Timeline Feed -->
+                <div class="lg:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-50 pb-3">Real-time alerts timeline</h4>
+                    
+                    <div class="space-y-4 text-xs font-semibold">
+                        <!-- Critical Alert -->
+                        <div class="p-4 bg-red-50/10 border border-red-100 rounded-2xl space-y-2.5 relative">
+                            <span class="absolute top-4 right-4 text-[9px] text-slate-400 font-normal">10 mins ago</span>
+                            <div class="flex items-center space-x-2.5">
+                                <span class="px-2 py-0.5 bg-red-100 text-red-600 rounded-full text-[8px] font-extrabold uppercase">Critical</span>
+                                <h5 class="font-bold text-slate-800">Critical Stock Depletion: Rice packets</h5>
+                            </div>
+                            <p class="text-slate-500 font-normal leading-normal">Rice bags count dropped below minimum margin threshold level (10 left in Bengaluru Hub warehouse).</p>
+                            <div class="flex space-x-2 pt-1">
+                                <button onclick="mockAction('PO initiated for 50 bags of Rice.')" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all text-[10px] font-bold shadow-sm">Restock Now</button>
+                                <button onclick="mockAction('Alert dismissed.')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 transition-all text-[10px] font-bold">Dismiss</button>
+                            </div>
+                        </div>
+
+                        <!-- High Alert -->
+                        <div class="p-4 bg-orange-50/10 border border-orange-100 rounded-2xl space-y-2.5 relative">
+                            <span class="absolute top-4 right-4 text-[9px] text-slate-400 font-normal">2 hrs ago</span>
+                            <div class="flex items-center space-x-2.5">
+                                <span class="px-2 py-0.5 bg-orange-100 text-[#F97316] rounded-full text-[8px] font-extrabold uppercase">High</span>
+                                <h5 class="font-bold text-slate-800">Transit Delays: Delivery partner #D-01</h5>
+                            </div>
+                            <p class="text-slate-500 font-normal leading-normal">Traffic gridlocks detected along outer bypass route. Active delivery eta expanded by 20 minutes.</p>
+                            <div class="flex space-x-2 pt-1">
+                                <button onclick="mockAction('WhatsApp chat session initiated with rider.')" class="px-3 py-1.5 bg-[#F97316] hover:bg-orange-600 text-white rounded-lg transition-all text-[10px] font-bold shadow-sm">Contact Rider</button>
+                                <button onclick="mockAction('Alert dismissed.')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 transition-all text-[10px] font-bold">Dismiss</button>
+                            </div>
+                        </div>
+
+                        <!-- Medium Alert -->
+                        <div class="p-4 bg-blue-50/10 border border-blue-100 rounded-2xl space-y-2.5 relative">
+                            <span class="absolute top-4 right-4 text-[9px] text-slate-400 font-normal">5 hrs ago</span>
+                            <div class="flex items-center space-x-2.5">
+                                <span class="px-2 py-0.5 bg-blue-100 text-[#2563EB] rounded-full text-[8px] font-extrabold uppercase">Medium</span>
+                                <h5 class="font-bold text-slate-800">Monthly GST Return Filing Reminder</h5>
+                            </div>
+                            <p class="text-slate-500 font-normal leading-normal">Filing due date on 10th of July. Complete bahi khata statement compilation checks.</p>
+                            <div class="flex space-x-2 pt-1">
+                                <button onclick="switchManagerTab('finance')" class="px-3 py-1.5 bg-[#2563EB] hover:bg-blue-750 text-white rounded-lg transition-all text-[10px] font-bold shadow-sm">View Filing</button>
+                                <button onclick="mockAction('Alert dismissed.')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 transition-all text-[10px] font-bold">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Recommendations Panel -->
+                <div class="lg:col-span-4 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-50 pb-3">AI Decision Recommendations</h4>
+                    
+                    <div class="space-y-3.5 text-xs font-semibold">
+                        <div class="p-3 bg-violet-50/20 border border-violet-100 rounded-xl space-y-1">
+                            <h5 class="text-[#7C3AED] font-bold text-[10px] uppercase">Launch weekend combo offer</h5>
+                            <p class="text-slate-400 font-normal leading-normal">Demand indexes suggest combining Tea + Biscuits to boost total ticket checkout values by 15%.</p>
+                            <button onclick="mockAction('Weekend Combo Offer coupon codes launched.')" class="px-2.5 py-1 bg-[#7C3AED] hover:bg-violet-850 text-white rounded-md transition-all text-[9px] font-bold">Activate Campaign</button>
+                        </div>
+
+                        <div class="p-3 bg-emerald-50/20 border border-emerald-100 rounded-xl space-y-1">
+                            <h5 class="text-[#16A34A] font-bold text-[10px] uppercase">Contact inactive loyalty shopper</h5>
+                            <p class="text-slate-400 font-normal leading-normal">Ayush Jha has not placed an order in 60 days. Send win-back discount offer via WhatsApp coupon.</p>
+                            <button onclick="mockAction('Win-back coupon distributed to Ayush Jha.')" class="px-2.5 py-1 bg-[#16A34A] hover:bg-emerald-800 text-white rounded-md transition-all text-[9px] font-bold">Send Coupon</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
