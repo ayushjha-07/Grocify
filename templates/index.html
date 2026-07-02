@@ -120,7 +120,7 @@
                  {% endif %}
 
                  <!-- Wood styled image frame -->
-                 <div class="h-40 bg-[#4E342E]/5 flex items-center justify-center border-b border-[#4E342E]/10 relative overflow-hidden">
+                 <a href="/product/{{ product.id }}" class="block h-40 bg-[#4E342E]/5 overflow-hidden border-b border-[#4E342E]/10 relative group">
                      <div class="absolute inset-0 bg-[#E5A93B]/5 opacity-30"></div>
                      
                      {% set img_file = product.image %}
@@ -138,13 +138,15 @@
                          {% set img_file = 'vim' %}
                      {% endif %}
                      <img src="{{ url_for('static', filename='images/' + img_file + '.png') }}" class="object-cover h-full w-full group-hover:scale-110 transition-transform duration-300">
-                 </div>
+                 </a>
 
                  <!-- Content details -->
                  <div class="p-4 space-y-3">
                      <div>
                          <span class="text-[9px] font-bold text-[#E5A93B] uppercase tracking-wider">{{ product.category }}</span>
-                         <h4 class="text-sm font-bold text-[#4E342E] leading-snug mt-0.5 min-h-[40px]">{{ product.name }}</h4>
+                         <h4 class="text-sm font-bold text-[#4E342E] leading-snug mt-0.5 min-h-[40px] hover:text-[#C65D2E] transition-colors">
+                             <a href="/product/{{ product.id }}">{{ product.name }}</a>
+                         </h4>
                      </div>
                      
                      <div class="flex items-center justify-between">

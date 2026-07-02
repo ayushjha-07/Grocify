@@ -1,0 +1,675 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - {{ settings.store_name if settings else 'Pramod General Store' }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium Page Transitions */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    /* Paper Texture overlay */
+    .paper-texture {
+        position: absolute;
+        inset: 0;
+        opacity: 0.04;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Thumbnail highlight styles */
+    .thumb-active {
+        border-color: #C96A2B !important;
+        box-shadow: 0 0 8px rgba(199, 106, 43, 0.2);
+    }
+    
+    /* Hover zoom framing effect */
+    .zoom-container {
+        overflow: hidden;
+        position: relative;
+    }
+    .zoom-image {
+        transition: transform 0.5s ease-out;
+    }
+    .zoom-container:hover .zoom-image {
+        transform: scale(1.15);
+    }
+
+    /* Tab active styles */
+    .tab-active {
+        border-color: #C96A2B !important;
+        color: #C96A2B !important;
+    }
+
+    /* Mobile bottom actions bar styling */
+    @media (max-width: 640px) {
+        .mobile-sticky-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(250, 244, 232, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 14px 20px;
+            border-top: 1.5px solid rgba(217, 164, 65, 0.25);
+            box-shadow: 0 -8px 24px rgba(78, 52, 46, 0.12);
+            z-index: 40;
+        }
+        .page-content-padding {
+            padding-bottom: 90px;
+        }
+    }
+</style>
+
+<!-- Notification Toast Alert -->
+<div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-[#FAF4E8] border border-[#2E7D32]/25 text-[#2E7D32] p-4 rounded-xl shadow-lg font-bold text-xs flex items-center justify-between space-x-4 max-w-md w-full transition-all duration-300 translate-y-[-100px] opacity-0">
+    <span id="toast-msg">Added to basket!</span>
+    <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+</div>
+
+<!-- Main Details Layout Container -->
+<div class="space-y-6 page-content-padding animate-fade-in relative">
+
+    <!-- Breadcrumb Navigation -->
+    <nav class="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-wider text-[#4A2F2A]/60">
+        <a href="/" class="hover:text-[#C96A2B] transition-colors">Home</a>
+        <i data-lucide="chevron-right" class="w-3 h-3 text-[#4A2F2A]/30"></i>
+        <a href="/?category={{ product.category }}" class="hover:text-[#C96A2B] transition-colors">{{ product.category }}</a>
+        <i data-lucide="chevron-right" class="w-3 h-3 text-[#4A2F2A]/30"></i>
+        <span class="text-[#4A2F2A] font-extrabold truncate max-w-[200px]">{{ product.name }}</span>
+    </nav>
+
+    <!-- Two-Column Product Presentation -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 bg-white border border-[#4E342E]/10 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden">
+        
+        <!-- Background paper texture -->
+        <div class="paper-texture"></div>
+
+        <!-- Left Column: Product Gallery (45% on desktop) -->
+        <div class="md:col-span-5 space-y-4">
+            
+            <!-- Large Image zoom frame with gold highlight border -->
+            <div class="zoom-container h-80 md:h-[400px] bg-[#FAF4E8]/50 border border-[#4E342E]/10 rounded-2xl flex items-center justify-center relative cursor-zoom-in group shadow-inner" onclick="openImageModal()">
+                <div class="absolute inset-0 bg-[#E5A93B]/5 opacity-30"></div>
+                
+                <!-- Product Badges overlay -->
+                <div class="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+                    {% if product.stock == 0 %}
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white uppercase tracking-wider">Out of Stock</span>
+                    {% elif product.stock < 10 %}
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-white uppercase tracking-wider animate-pulse">Low Stock</span>
+                    {% endif %}
+                    
+                    {% if product.price > 400 %}
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-gradient-to-r from-[#C96A2B] to-[#D9A441] text-[#FAF4E8] uppercase tracking-wider">Best Seller</span>
+                    {% else %}
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2E7D32] text-white uppercase tracking-wider">Organic</span>
+                    {% endif %}
+                </div>
+
+                <!-- Main product image display -->
+                {% set img_file = product.image %}
+                {% if product.image == 'maggi' or product.image == 'bhujia' %}
+                    {% set img_file = 'biscuits' %}
+                {% elif product.image == 'chana' %}
+                    {% set img_file = 'dal' %}
+                {% elif product.image == 'frooti' %}
+                    {% set img_file = 'mustard_oil' %}
+                {% elif product.image == 'thumsup' %}
+                    {% set img_file = 'coffee' %}
+                {% elif product.image == 'shampoo' %}
+                    {% set img_file = 'handwash' %}
+                {% elif product.image == 'lizol' %}
+                    {% set img_file = 'vim' %}
+                {% endif %}
+                <img id="main-product-img" src="{{ url_for('static', filename='images/' + img_file + '.png') }}" class="zoom-image object-cover h-full w-full rounded-2xl" alt="{{ product.name }}">
+                
+                <!-- Hover actions cue icon -->
+                <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div class="p-3 rounded-full bg-white/90 shadow-md">
+                        <i data-lucide="maximize" class="w-5 h-5 text-[#4E342E]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Gallery Thumbnails (Carousel) -->
+            <div class="grid grid-cols-4 gap-3">
+                <button onclick="changeMainImage('{{ url_for('static', filename='images/' + img_file + '.png') }}', this)" class="thumb-btn h-16 bg-[#FAF4E8]/50 border border-[#4E342E]/10 rounded-xl overflow-hidden p-1.5 hover:border-[#C96A2B] transition-all thumb-active">
+                    <img src="{{ url_for('static', filename='images/' + img_file + '.png') }}" class="object-cover h-full w-full rounded-lg">
+                </button>
+                <button onclick="changeMainImage('{{ url_for('static', filename='images/ghee.png') }}', this)" class="thumb-btn h-16 bg-[#FAF4E8]/50 border border-[#4E342E]/10 rounded-xl overflow-hidden p-1.5 hover:border-[#C96A2B] transition-all">
+                    <img src="{{ url_for('static', filename='images/ghee.png') }}" class="object-cover h-full w-full rounded-lg">
+                </button>
+                <button onclick="changeMainImage('{{ url_for('static', filename='images/salt.png') }}', this)" class="thumb-btn h-16 bg-[#FAF4E8]/50 border border-[#4E342E]/10 rounded-xl overflow-hidden p-1.5 hover:border-[#C96A2B] transition-all">
+                    <img src="{{ url_for('static', filename='images/salt.png') }}" class="object-cover h-full w-full rounded-lg">
+                </button>
+                <button onclick="changeMainImage('{{ url_for('static', filename='images/dal.png') }}', this)" class="thumb-btn h-16 bg-[#FAF4E8]/50 border border-[#4E342E]/10 rounded-xl overflow-hidden p-1.5 hover:border-[#C96A2B] transition-all">
+                    <img src="{{ url_for('static', filename='images/dal.png') }}" class="object-cover h-full w-full rounded-lg">
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Column: Product Information & Checkout Actions (55% on desktop) -->
+        <div class="md:col-span-7 flex flex-col justify-between space-y-6">
+            
+            <!-- Top Details block -->
+            <div class="space-y-4">
+                <div>
+                    <span class="text-[10px] font-bold text-[#D9A441] uppercase tracking-widest block">{{ product.category }}</span>
+                    <h1 class="text-2xl md:text-3xl font-serif font-bold text-[#4A2F2A] leading-tight mt-1">{{ product.name }}</h1>
+                    <span class="text-[11px] font-semibold text-slate-500">Supplier: <strong class="text-[#4A2F2A]">{{ specs.Brand }}</strong></span>
+                </div>
+
+                <!-- Star Ratings -->
+                <div class="flex items-center space-x-2.5">
+                    <div class="flex items-center text-amber-400">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <span class="text-xs font-bold text-[#4A2F2A]">4.8</span>
+                    <span class="text-xs text-slate-400 font-semibold">(325 Verified Customer Reviews)</span>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Price and Discout block -->
+                <div class="flex items-baseline space-x-3.5">
+                    <span class="text-3xl font-extrabold text-[#4A2F2A]">₹{{ product.price }}</span>
+                    {% set original_price = (product.price * 1.25) | round | int %}
+                    <span class="text-base text-slate-400 line-through font-bold">₹{{ original_price }}</span>
+                    <span class="px-2 py-0.5 rounded-lg bg-[#2E7D32]/10 border border-[#2E7D32]/25 text-[#2E7D32] text-[10px] font-bold uppercase tracking-wider">20% Off</span>
+                </div>
+
+                <!-- Weight Options Selector -->
+                <div class="space-y-2">
+                    <span class="block text-[10px] font-bold text-[#4A2F2A]/70 uppercase tracking-wider">Select Weight / Pack Size</span>
+                    <div class="flex flex-wrap gap-2.5">
+                        {% for option in weight_options %}
+                        <button onclick="selectWeight(this)" class="weight-opt-btn px-4.5 py-2.5 rounded-xl border-2 text-xs font-extrabold transition-all 
+                                    {% if loop.first %}
+                                        border-[#C96A2B] text-[#C96A2B] bg-[#C96A2B]/5
+                                    {% else %}
+                                        border-[#4A2F2A]/15 text-[#4A2F2A]/70 hover:border-[#C96A2B]/40
+                                    {% endif %}">
+                            {{ option }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Delivery Details & Threshold tip -->
+                <div class="p-3 bg-[#FAF4E8] border border-[#D9A441]/25 rounded-2xl flex flex-wrap gap-4 items-center justify-between text-xs font-semibold text-[#4A2F2A]/80">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="truck" class="w-4 h-4 text-[#C96A2B]"></i>
+                        <span>Estimated Delivery: <strong class="text-[#2E7D32]">Tomorrow Morning</strong></span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-1.5 text-[10px] text-[#2E7D32] font-bold uppercase">
+                        <i data-lucide="sparkles" class="w-4 h-4 animate-pulse"></i>
+                        <span>Free Shipping over ₹{{ settings.free_delivery_threshold if settings else '500' }}</span>
+                    </div>
+                </div>
+
+                <!-- Product Highlights List -->
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold text-[#4A2F2A]/85 pt-1">
+                    <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>100% Fresh & Authentic</span></div>
+                    <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>Secure Wooden Crate Pack</span></div>
+                    <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>Cash On Village Delivery</span></div>
+                    <div class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-[#2E7D32] shrink-0"></i><span>Trusted Since Generations</span></div>
+                </div>
+            </div>
+
+            <!-- Bottom Actions and Quantity block -->
+            <div class="space-y-4 pt-4">
+                <div class="flex flex-col sm:flex-row gap-4 items-center">
+                    
+                    <!-- Quantity Input Selector -->
+                    <div class="flex items-center space-x-1.5 border border-[#4A2F2A]/15 rounded-xl p-1 bg-[#FAF4E8]/40 self-stretch sm:self-auto justify-between">
+                        <button onclick="adjustQty(-1)" class="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 focus:outline-none"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                        <input type="number" id="product-qty" value="1" min="1" max="{{ product.stock }}" class="w-10 text-center bg-transparent border-none text-sm font-extrabold focus:ring-0 focus:outline-none p-0 text-[#4A2F2A]">
+                        <button onclick="adjustQty(1)" class="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 focus:outline-none"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <!-- CTA Action buttons -->
+                    <div class="flex-grow flex gap-3 self-stretch">
+                        <button onclick="addCurrentProductToBasket(false)" {% if product.stock == 0 %}disabled{% endif %} class="flex-grow py-3.5 border-2 border-[#C96A2B] text-[#C96A2B] font-extrabold rounded-xl hover:bg-[#C96A2B]/5 active:scale-[0.98] transition-all uppercase tracking-widest text-xs flex items-center justify-center space-x-2 disabled:bg-slate-100 disabled:border-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+                            <i data-lucide="shopping-basket" class="w-4 h-4"></i>
+                            <span>Add to Basket</span>
+                        </button>
+                        
+                        <button onclick="addCurrentProductToBasket(true)" {% if product.stock == 0 %}disabled{% endif %} class="flex-grow py-3.5 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-orange-950/20 uppercase tracking-widest text-xs btn-ripple flex items-center justify-center space-x-2 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 disabled:cursor-not-allowed">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>Buy Now</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Auxiliary actions -->
+                <div class="flex items-center justify-between sm:justify-start sm:space-x-6 text-[10px] uppercase font-bold text-[#4A2F2A]/60 pt-2 border-t border-slate-100">
+                    <button onclick="mockAction('Added to Wishlist!')" class="hover:text-[#C96A2B] flex items-center space-x-1.5 transition-colors"><i data-lucide="heart" class="w-3.5 h-3.5"></i><span>Wishlist</span></button>
+                    <button onclick="mockAction('Comparison list updated.')" class="hover:text-[#C96A2B] flex items-center space-x-1.5 transition-colors"><i data-lucide="git-compare" class="w-3.5 h-3.5"></i><span>Compare</span></button>
+                    <button onclick="mockAction('Product link copied to clipboard!')" class="hover:text-[#C96A2B] flex items-center space-x-1.5 transition-colors"><i data-lucide="share-2" class="w-3.5 h-3.5"></i><span>Share</span></button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bottom Section: Tabs Information Console -->
+    <div class="bg-white border border-[#4E342E]/10 rounded-3xl p-6 md:p-8 shadow-sm">
+        
+        <!-- Tab Selector Menu -->
+        <div class="border-b border-slate-200">
+            <div class="flex space-x-8 -mb-px overflow-x-auto">
+                <button onclick="switchTab('description')" id="tab-btn-description" class="tab-btn py-4 text-sm font-bold border-b-2 border-transparent transition-all tab-active">Description</button>
+                <button onclick="switchTab('specifications')" id="tab-btn-specifications" class="tab-btn py-4 text-sm font-bold border-b-2 border-transparent transition-all text-slate-400 hover:text-slate-600">Specifications</button>
+                <button onclick="switchTab('nutrition')" id="tab-btn-nutrition" class="tab-btn py-4 text-sm font-bold border-b-2 border-transparent transition-all text-slate-400 hover:text-slate-600">Nutrition Info</button>
+                <button onclick="switchTab('reviews')" id="tab-btn-reviews" class="tab-btn py-4 text-sm font-bold border-b-2 border-transparent transition-all text-slate-400 hover:text-slate-600">Reviews ({{ reviews|length }})</button>
+            </div>
+        </div>
+
+        <!-- Description Pane -->
+        <div id="tab-pane-description" class="tab-pane py-6 space-y-4 text-slate-600 text-xs font-semibold leading-relaxed">
+            <h4 class="text-sm font-bold text-[#4E342E]">Product Overview</h4>
+            <p class="font-normal text-slate-600 leading-loose">
+                Bring home the premium quality of {{ product.name }} sourced directly from verified farmers and packaged with traditional trust. High organic values are carefully retained by avoiding heavy chemical processing, leaving you with delicious and healthy elements in every single serving. Perfect for everyday home cooking and family meals.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-3">
+                <div class="space-y-2">
+                    <span class="block font-bold text-[#4E342E]">Storage Instructions</span>
+                    <p class="font-normal text-slate-500">{{ specs.Storage }}. Keep containers tightly closed to protect freshness.</p>
+                </div>
+                <div class="space-y-2">
+                    <span class="block font-bold text-[#4E342E]">Ingredients</span>
+                    <p class="font-normal text-slate-500">100% pure organically farmed ingredients of premium grades. No artificial colors, preservatives, or taste enhancers added.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Specifications Pane -->
+        <div id="tab-pane-specifications" class="tab-pane hidden py-6 space-y-4">
+            <h4 class="text-sm font-bold text-[#4E342E] mb-4">Technical Details</h4>
+            
+            <div class="border border-slate-100 rounded-2xl overflow-hidden max-w-xl">
+                <table class="w-full border-collapse text-xs font-semibold text-left">
+                    <tbody>
+                        {% for key, val in specs.items() %}
+                        <tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                            <td class="px-4 py-3 bg-[#FAF4E8]/20 text-[#4E342E] font-bold w-1/3">{{ key }}</td>
+                            <td class="px-4 py-3 text-slate-600 font-normal">{{ val }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Nutrition Info Pane -->
+        <div id="tab-pane-nutrition" class="tab-pane hidden py-6 space-y-4">
+            <h4 class="text-sm font-bold text-[#4E342E] mb-4">Nutritional Information (Approx. Values per 100g)</h4>
+            
+            <div class="border border-slate-100 rounded-2xl overflow-hidden max-w-xl">
+                <table class="w-full border-collapse text-xs font-semibold text-left">
+                    <thead>
+                        <tr class="bg-[#FAF4E8]/50 text-[#4E342E] font-bold border-b border-slate-200">
+                            <th class="px-4 py-3 w-1/2">Nutrient Component</th>
+                            <th class="px-4 py-3 w-1/2">Value per 100g</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in nutrition %}
+                        <tr class="border-b border-slate-50 hover:bg-slate-50/50 text-slate-600 font-normal">
+                            <td class="px-4 py-3 bg-[#FAF4E8]/10 text-[#4E342E] font-bold">{{ entry.item }}</td>
+                            <td class="px-4 py-3">{{ entry.value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Reviews Pane -->
+        <div id="tab-pane-reviews" class="tab-pane hidden py-6 space-y-6">
+            
+            <!-- Ratings summary header -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+                <div class="flex items-center space-x-4">
+                    <span class="text-5xl font-extrabold text-[#4E342E]">4.8</span>
+                    <div class="space-y-1">
+                        <div class="flex items-center text-amber-400">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Average Customer Rating</span>
+                    </div>
+                </div>
+                
+                <button onclick="mockAction('Review portal requires verification code.')" class="px-5 py-2.5 bg-[#C96A2B] text-white hover:bg-[#B3581E] text-xs font-bold rounded-xl transition-all shadow-md">
+                    Write a Review
+                </button>
+            </div>
+
+            <!-- Reviews list queue -->
+            <div class="space-y-5">
+                {% for r in reviews %}
+                <div class="p-4 bg-slate-50/60 border border-slate-100 rounded-2xl text-xs font-semibold space-y-3.5">
+                    
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="space-y-1">
+                            <span class="font-bold text-[#4E342E] block">{{ r.name }}</span>
+                            <div class="flex items-center text-amber-400">
+                                {% for i in range(r.rating) %}
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 text-[10px] text-slate-400">
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-extrabold uppercase border border-emerald-100 flex items-center gap-1">
+                                <i data-lucide="badge-check" class="w-3 h-3"></i> Verified Buy
+                            </span>
+                            <span class="font-mono">{{ r.date }}</span>
+                        </div>
+                    </div>
+
+                    <p class="text-slate-600 font-normal leading-relaxed">{{ r.comment }}</p>
+
+                    <div class="flex items-center space-x-2 text-[10px] text-slate-400">
+                        <span>Was this review helpful?</span>
+                        <button onclick="this.innerHTML='Helpful ({{ r.helpful + 1 }})'" class="px-2.5 py-1 bg-white border border-slate-200 hover:border-slate-300 rounded-lg font-bold text-slate-600 transition-colors">
+                            Helpful ({{ r.helpful }})
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Related Products horizontal carousel -->
+    <div class="space-y-4">
+        <h3 class="text-base font-serif font-bold text-[#4E342E] uppercase">Related Products</h3>
+        
+        <div class="flex space-x-6 overflow-x-auto pb-4 scrollbar-thin">
+            {% for rel in related %}
+            <div class="product-item-card overflow-hidden rounded-2xl bg-white border border-[#4E342E]/10 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:border-[#C65D2E]/40 hover:shadow-lg relative group min-w-[220px] max-w-[220px] shrink-0"
+                 data-id="{{ rel.id }}"
+                 data-name="{{ rel.name }}"
+                 data-category="{{ rel.category }}"
+                 data-price="{{ rel.price }}"
+                 data-stock="{{ rel.stock }}">
+                 
+                 {% if rel.stock == 0 %}
+                 <span class="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white shadow-sm uppercase">Out of Stock</span>
+                 {% elif rel.stock < 10 %}
+                 <span class="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-white shadow-sm uppercase animate-pulse">Low Stock</span>
+                 {% endif %}
+
+                 <!-- Image frame -->
+                 <a href="/product/{{ rel.id }}" class="block h-36 bg-[#4E342E]/5 overflow-hidden border-b border-[#4E342E]/10 relative group">
+                     <div class="absolute inset-0 bg-[#E5A93B]/5 opacity-30"></div>
+                     
+                     {% set rel_img = rel.image %}
+                     {% if rel.image == 'maggi' or rel.image == 'bhujia' %}
+                         {% set rel_img = 'biscuits' %}
+                     {% elif rel.image == 'chana' %}
+                         {% set rel_img = 'dal' %}
+                     {% elif rel.image == 'frooti' %}
+                         {% set rel_img = 'mustard_oil' %}
+                     {% elif rel.image == 'thumsup' %}
+                         {% set rel_img = 'coffee' %}
+                     {% elif rel.image == 'shampoo' %}
+                         {% set rel_img = 'handwash' %}
+                     {% elif rel.image == 'lizol' %}
+                         {% set rel_img = 'vim' %}
+                     {% endif %}
+                     <img src="{{ url_for('static', filename='images/' + rel_img + '.png') }}" class="object-cover h-full w-full group-hover:scale-110 transition-transform duration-300">
+                 </a>
+
+                 <!-- Content details -->
+                 <div class="p-3 space-y-2.5">
+                     <div>
+                         <span class="text-[8px] font-bold text-[#E5A93B] uppercase tracking-wider block">{{ rel.category }}</span>
+                         <h4 class="text-xs font-bold text-[#4E342E] leading-snug mt-0.5 min-h-[32px] hover:text-[#C96A2B] transition-colors truncate" title="{{ rel.name }}">
+                             <a href="/product/{{ rel.id }}">{{ rel.name }}</a>
+                         </h4>
+                     </div>
+                     
+                     <div class="flex items-center justify-between text-xs font-bold">
+                         <span class="text-sm font-extrabold text-[#4E342E]">₹{{ rel.price }}</span>
+                         <span class="text-[9px] text-slate-400 font-semibold">{{ rel.stock }} units</span>
+                     </div>
+
+                     {% if rel.stock > 0 %}
+                     <button onclick="addToCart({{ rel.id }}, '{{ rel.name }}', {{ rel.price }}, {{ rel.stock }})" class="w-full py-1.5 bg-gradient-to-r from-[#C65D2E] to-[#A04000] text-[#F5E6CA] font-bold rounded-lg text-[10px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-orange-950/10 hover:shadow-orange-950/20">
+                         Add to Basket
+                     </button>
+                     {% else %}
+                     <button disabled class="w-full py-1.5 bg-slate-200 text-slate-400 font-bold rounded-lg text-[10px] cursor-not-allowed">
+                         Out of Stock
+                     </button>
+                     {% endif %}
+                 </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Fullscreen Image Modal Overlay -->
+<div id="image-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeImageModal()"></div>
+    <div class="relative max-w-3xl max-h-[90vh] z-10 flex items-center justify-center">
+        <button onclick="closeImageModal()" class="absolute -top-12 right-0 text-white hover:text-slate-300">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+        <img id="modal-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl border-2 border-[#D9A441]/40">
+    </div>
+</div>
+
+<!-- Floating Cart Button -->
+<div id="floating-cart-btn" class="fixed bottom-6 right-6 z-40 transition-all duration-300 transform translate-y-20 opacity-0">
+    <a href="/?checkout=true" class="bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] p-4 rounded-full shadow-2xl flex items-center justify-center relative hover:scale-110 active:scale-95 transition-all">
+        <i data-lucide="shopping-basket" class="w-6 h-6"></i>
+        <span id="floating-cart-badge" class="absolute -top-1.5 -right-1.5 bg-[#2E7D32] border-2 border-white text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">0</span>
+    </a>
+</div>
+
+<!-- Mobile Sticky bottom CTA bar -->
+<div class="mobile-sticky-bottom hidden">
+    <button onclick="addCurrentProductToBasket(false)" {% if product.stock == 0 %}disabled{% endif %} class="w-1/2 py-3 bg-[#FAF4E8] border-2 border-[#C96A2B] text-[#C96A2B] font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2 disabled:bg-slate-100 disabled:border-slate-200 disabled:text-slate-400">
+        <i data-lucide="shopping-basket" class="w-4 h-4"></i>
+        <span>Add Basket</span>
+    </button>
+    <button onclick="addCurrentProductToBasket(true)" {% if product.stock == 0 %}disabled{% endif %} class="w-1/2 py-3 bg-gradient-to-r from-[#C96A2B] to-[#B3581E] text-[#FAF4E8] font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md shadow-orange-950/20 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400">
+        <i data-lucide="zap" class="w-4 h-4"></i>
+        <span>Buy Now</span>
+    </button>
+</div>
+
+<script>
+    // Tab Switching controller
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.className = "tab-btn py-4 text-sm font-bold border-b-2 border-transparent transition-all text-slate-400 hover:text-slate-600";
+        });
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.add('hidden');
+        });
+        
+        const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+        if (activeBtn) {
+            activeBtn.className = "tab-btn py-4 text-sm font-bold border-b-2 border-transparent transition-all tab-active font-extrabold";
+        }
+        
+        const activePane = document.getElementById(`tab-pane-${tabId}`);
+        if (activePane) {
+            activePane.classList.remove('hidden');
+        }
+    }
+
+    // Gallery Image switches
+    function changeMainImage(src, btnEl) {
+        document.getElementById('main-product-img').src = src;
+        document.querySelectorAll('.thumb-btn').forEach(btn => btn.classList.remove('thumb-active'));
+        btnEl.classList.add('thumb-active');
+    }
+
+    // Modal Fullscreen handlers
+    function openImageModal() {
+        const mainSrc = document.getElementById('main-product-img').src;
+        document.getElementById('modal-img').src = mainSrc;
+        document.getElementById('image-modal').classList.remove('hidden');
+    }
+    function closeImageModal() {
+        document.getElementById('image-modal').classList.add('hidden');
+    }
+
+    // Adjust Qty input
+    function adjustQty(amount) {
+        const qtyInp = document.getElementById('product-qty');
+        const current = parseInt(qtyInp.value) || 1;
+        const maxStock = {{ product.stock }};
+        
+        const target = Math.max(1, Math.min(maxStock, current + amount));
+        qtyInp.value = target;
+    }
+
+    // Weight select highlight
+    function selectWeight(btnEl) {
+        document.querySelectorAll('.weight-opt-btn').forEach(btn => {
+            btn.className = "weight-opt-btn px-4.5 py-2.5 rounded-xl border-2 text-xs font-extrabold border-[#4A2F2A]/15 text-[#4A2F2A]/70 hover:border-[#C96A2B]/40 transition-all";
+        });
+        btnEl.className = "weight-opt-btn px-4.5 py-2.5 rounded-xl border-2 text-xs font-extrabold border-[#C96A2B] text-[#C96A2B] bg-[#C96A2B]/5 transition-all";
+    }
+
+    // Custom alerts handler
+    function mockAction(msg) {
+        alert(`Namaste! ${msg}`);
+    }
+
+    // Toast logic
+    let toastTimeout;
+    function showNotification(msg) {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+        if (!toast || !toastMsg) return;
+        
+        toastMsg.textContent = msg;
+        toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            hideToast();
+        }, 3000);
+    }
+    function hideToast() {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-[-100px]', 'opacity-0');
+        }
+    }
+
+    // Global cart binding
+    function addCurrentProductToBasket(isBuyNow = false) {
+        const qtyInp = document.getElementById('product-qty');
+        const qty = parseInt(qtyInp.value) || 1;
+        const maxStock = {{ product.stock }};
+        const id = {{ product.id }};
+        const name = "{{ product.name }}";
+        const price = {{ product.price }};
+        
+        // Retrieve cart
+        let activeCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+        
+        let existing = activeCart.find(item => item.id === id);
+        if (existing) {
+            if (existing.quantity + qty <= maxStock) {
+                existing.quantity += qty;
+            } else {
+                existing.quantity = maxStock;
+                showNotification(`Adjusted qty: Only ${maxStock} units of this item are in stock.`);
+            }
+        } else {
+            activeCart.push({
+                id: id,
+                name: name,
+                price: price,
+                quantity: Math.min(qty, maxStock),
+                maxStock: maxStock
+            });
+        }
+        
+        // Save back
+        localStorage.setItem('pramod_store_cart', JSON.stringify(activeCart));
+        
+        // Update local cart variable in main.js if accessible
+        if (typeof cart !== 'undefined') {
+            cart = activeCart;
+        }
+        
+        showNotification(`✓ Added ${qty} units of ${name} to your basket!`);
+        updateFloatingCartBadge();
+        
+        if (isBuyNow) {
+            setTimeout(() => {
+                window.location.href = "/?checkout=true";
+            }, 500);
+        }
+    }
+
+    function updateFloatingCartBadge() {
+        const badge = document.getElementById('floating-cart-badge');
+        const container = document.getElementById('floating-cart-btn');
+        if (!badge || !container) return;
+        
+        let activeCart = JSON.parse(localStorage.getItem('pramod_store_cart')) || [];
+        const totalQty = activeCart.reduce((sum, item) => sum + item.quantity, 0);
+        badge.textContent = totalQty;
+        
+        if (totalQty > 0) {
+            container.classList.remove('translate-y-20', 'opacity-0');
+            container.classList.add('translate-y-0', 'opacity-100');
+        } else {
+            container.classList.remove('translate-y-0', 'opacity-100');
+            container.classList.add('translate-y-20', 'opacity-0');
+        }
+    }
+
+    // Toggle mobile sticky actions bar
+    function toggleMobileStickyActions() {
+        const stickyBar = document.querySelector('.mobile-sticky-bottom');
+        if (window.innerWidth <= 640) {
+            stickyBar.classList.remove('hidden');
+            stickyBar.classList.add('flex');
+        } else {
+            stickyBar.classList.remove('flex');
+            stickyBar.classList.add('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateFloatingCartBadge();
+        toggleMobileStickyActions();
+        window.addEventListener('resize', toggleMobileStickyActions);
+    });
+</script>
+{% endblock %}

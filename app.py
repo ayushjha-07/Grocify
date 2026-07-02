@@ -791,6 +791,76 @@ def update_user_role():
     return redirect(url_for('admin', tab='users'))
 
 
+@app.route('/product/<int:product_id>')
+def product_details(product_id):
+    """Product details page with rich specification and reviews."""
+    product = next((p for p in products_db if p['id'] == product_id), None)
+    if not product:
+        flash("Product not found!", "error")
+        return redirect(url_for('index'))
+        
+    # Get related products (same category, max 4, excluding current)
+    related = [p for p in products_db if p['category'] == product['category'] and p['id'] != product['id']][:4]
+    if len(related) < 4:
+        # Pad with other products if not enough in same category
+        pad = [p for p in products_db if p['id'] != product['id'] and p not in related][:4 - len(related)]
+        related.extend(pad)
+        
+    # Mock reviews
+    mock_reviews_pool = [
+        {"name": "Ramesh Kumar Mishra", "rating": 5, "date": "2026-06-10", "comment": "Excellent quality! Packaging was original and fresh. Highly recommended.", "verified": True, "helpful": 12},
+        {"name": "Gita Devi", "rating": 5, "date": "2026-06-08", "comment": "Bahut accha product hai. Price is very reasonable compared to local city market.", "verified": True, "helpful": 8},
+        {"name": "Mahendra Singh", "rating": 4, "date": "2026-06-01", "comment": "Good quality and authentic taste. Delivery boy Sanjay brought it on time.", "verified": True, "helpful": 5},
+        {"name": "Suresh Chandra", "rating": 5, "date": "2026-05-28", "comment": "Standard packaging. Clean and fresh. Pramod Ji always delivers the best.", "verified": True, "helpful": 15}
+    ]
+    
+    # Deterministic mock sample based on product ID to avoid page reload randomness
+    rand_idx = (product_id * 7) % len(mock_reviews_pool)
+    reviews = [
+        mock_reviews_pool[rand_idx],
+        mock_reviews_pool[(rand_idx + 1) % len(mock_reviews_pool)],
+        mock_reviews_pool[(rand_idx + 2) % len(mock_reviews_pool)]
+    ]
+    
+    # Mock specifications and nutrition based on category
+    specs = {
+        "Brand": product['supplier'] if 'supplier' in product else "Pramod Fresh",
+        "Manufacturer": product['supplier'] if 'supplier' in product else "Pramod General Store",
+        "Shelf Life": "6 Months" if product['category'] in ["Rice & Flour", "Pulses & Grains", "Oils & Spices", "Grocery & Staples"] else "12 Months",
+        "Storage": "Store in dry place, away from sunlight" if product['category'] not in ["Dairy Products"] else "Refrigerate after opening",
+        "Country of Origin": "India"
+    }
+    
+    # Mock nutrition table
+    nutrition = [
+        {"item": "Energy", "value": "364 kcal"},
+        {"item": "Carbohydrates", "value": "73 g"},
+        {"item": "Protein", "value": "10 g"},
+        {"item": "Fat", "value": "1.5 g"},
+        {"item": "Dietary Fiber", "value": "11 g"}
+    ]
+    
+    # Weight/Size options
+    if "1kg" in product['name'].lower() or "1l" in product['name'].lower():
+        weight_options = ["500g / 500ml", "1kg / 1L", "2kg / 2L"]
+    elif "5kg" in product['name'].lower():
+        weight_options = ["1kg", "5kg", "10kg"]
+    elif "100g" in product['name'].lower():
+        weight_options = ["50g", "100g", "250g"]
+    else:
+        weight_options = ["Standard Pack", "Family Pack"]
+        
+    return render_template(
+        'product_details.html',
+        product=product,
+        related=related,
+        reviews=reviews,
+        specs=specs,
+        nutrition=nutrition,
+        weight_options=weight_options
+    )
+
+
 @app.route('/delivery_dashboard')
 def delivery_dashboard():
     """Specialized delivery staff mobile workspace."""
